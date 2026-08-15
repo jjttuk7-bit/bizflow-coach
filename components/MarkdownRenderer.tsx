@@ -32,16 +32,16 @@ const BodyRenderer: React.FC<{ content: string }> = ({ content }) => {
             const body = tableRows.slice(1);
             elements.push(
                 <div key={`table-wrapper-${elements.length}`} className="overflow-x-auto my-4 -mx-4">
-                    <table key={`table-${elements.length}`} className="min-w-full divide-y divide-gray-200 border-y border-gray-200">
-                        <thead className="bg-gray-50">
+                    <table key={`table-${elements.length}`} className="min-w-full divide-y divide-rule border-y border-rule">
+                        <thead className="bg-parchment">
                             <tr>
-                                {header.map((cell, idx) => <th key={idx} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{cell.trim()}</th>)}
+                                {header.map((cell, idx) => <th key={idx} className="px-4 py-2 text-left text-xs font-medium text-slate-ink uppercase tracking-wider">{cell.trim()}</th>)}
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-linen divide-y divide-rule">
                             {body.map((row, rIdx) => (
-                                <tr key={rIdx} className="hover:bg-gray-50">
-                                    {row.map((cell, cIdx) => <td key={cIdx} className="px-4 py-3 whitespace-normal text-sm text-gray-700" dangerouslySetInnerHTML={{ __html: cell.trim() }}></td>)}
+                                <tr key={rIdx} className="hover:bg-parchment">
+                                    {row.map((cell, cIdx) => <td key={cIdx} className="px-4 py-3 whitespace-normal text-sm text-carbon" dangerouslySetInnerHTML={{ __html: cell.trim() }}></td>)}
                                 </tr>
                             ))}
                         </tbody>
@@ -92,7 +92,7 @@ const BodyRenderer: React.FC<{ content: string }> = ({ content }) => {
     flushList();
     flushTable();
 
-    return <div className="prose prose-sm max-w-none text-gray-800 space-y-2">{elements}</div>;
+    return <div className="prose prose-sm max-w-none text-ink space-y-2">{elements}</div>;
 };
 
 
@@ -147,18 +147,18 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
     return (
         <div className="space-y-3">
             {sections.map((section, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg overflow-hidden transition-shadow hover:shadow-md">
+                <div key={index} className="border border-rule rounded-sm overflow-hidden">
                     <button
-                        className="w-full flex justify-between items-center p-4 bg-slate-100 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+                        className="w-full flex justify-between items-center p-4 bg-parchment hover:bg-rule focus:outline-none focus:ring-2 focus:ring-ink focus:ring-inset"
                         onClick={() => toggleSection(index)}
                         aria-expanded={openSections.has(index)}
                         aria-controls={`section-content-${index}`}
                     >
-                        <h3 className="text-lg font-bold text-gray-800 text-left">{section.title}</h3>
-                        <ChevronDownIcon className={`w-6 h-6 text-gray-500 transition-transform duration-300 ${openSections.has(index) ? 'rotate-180' : ''}`} />
+                        <h3 className="text-lg font-bold text-ink text-left">{section.title}</h3>
+                        <ChevronDownIcon className={`w-6 h-6 text-slate-ink transition-transform duration-300 ${openSections.has(index) ? 'rotate-180' : ''}`} />
                     </button>
                     {openSections.has(index) && (
-                        <div id={`section-content-${index}`} className="p-4 bg-white">
+                        <div id={`section-content-${index}`} className="p-4 bg-linen">
                            <BodyRenderer content={section.content} />
                         </div>
                     )}

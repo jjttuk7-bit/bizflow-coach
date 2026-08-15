@@ -889,8 +889,8 @@ function App() {
     if (isLoading && (stage === 'profile-setup' || (stage === 'initial-analysis' && !analysisResult))) {
       return (
         <div className="flex flex-col items-center justify-center h-screen">
-          <SpinnerIcon className="w-16 h-16 animate-spin text-indigo-600" />
-          <p className="mt-4 text-lg text-gray-700">AI가 열심히 작업 중입니다...</p>
+          <SpinnerIcon className="w-16 h-16 animate-spin text-ink" />
+          <p className="mt-4 text-lg text-carbon">AI가 열심히 작업 중입니다...</p>
         </div>
       );
     }
@@ -907,7 +907,7 @@ function App() {
           <div className="relative">
             <button 
               onClick={logout}
-              className="fixed top-4 right-4 z-50 px-4 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full text-slate-600 text-sm font-medium hover:bg-white hover:text-red-600 transition-all shadow-sm"
+              className="fixed top-4 right-4 z-50 px-4 py-2 bg-linen/90 backdrop-blur-sm border border-rule rounded-sm text-carbon text-sm font-medium hover:bg-linen hover:text-red-600 transition-all"
             >
               로그아웃
             </button>
@@ -1038,13 +1038,13 @@ function App() {
   const containerClasses = isEditorialStage
     ? 'min-h-screen bg-paper'
     : stage === 'dashboard'
-      ? 'min-h-screen bg-slate-50'
-      : 'min-h-screen bg-slate-50 flex items-center justify-center p-4';
+      ? 'min-h-screen bg-paper'
+      : 'min-h-screen bg-paper flex items-center justify-center p-4';
 
   if (loadingAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <SpinnerIcon className="w-12 h-12 animate-spin text-indigo-600" />
+      <div className="min-h-screen bg-paper flex items-center justify-center">
+        <SpinnerIcon className="w-12 h-12 animate-spin text-ink" />
       </div>
     );
   }
@@ -1055,7 +1055,7 @@ function App() {
       <React.Suspense
         fallback={
           <div className="flex flex-col items-center justify-center h-screen">
-            <SpinnerIcon className="w-16 h-16 animate-spin text-indigo-600" />
+            <SpinnerIcon className="w-16 h-16 animate-spin text-ink" />
           </div>
         }
       >

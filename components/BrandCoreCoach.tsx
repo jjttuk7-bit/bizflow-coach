@@ -106,9 +106,9 @@ const BrandCoreCoach: React.FC<BrandCoreCoachProps> = ({ specialist, onBack, bus
     const isInputDisabled = isLoading || stage === 'done' || messages[messages.length-1]?.isConfirmation;
 
     return (
-        <div className="w-full max-w-3xl mx-auto bg-white rounded-xl shadow-2xl flex flex-col h-[80vh] animate-fade-in">
-            <header className="flex items-center p-4 border-b border-gray-200 relative">
-                <button onClick={onBack} className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-500 hover:text-gray-800">
+        <div className="w-full max-w-3xl mx-auto bg-linen rounded-sm flex flex-col h-[80vh] animate-fade-in border border-rule">
+            <header className="flex items-center p-4 border-b border-rule relative">
+                <button onClick={onBack} className="absolute top-1/2 left-4 -translate-y-1/2 text-slate-ink hover:text-ink">
                     <ArrowLeftIcon className="w-6 h-6" />
                 </button>
                 <div className="text-center w-full flex items-center justify-center gap-3">
@@ -116,22 +116,22 @@ const BrandCoreCoach: React.FC<BrandCoreCoachProps> = ({ specialist, onBack, bus
                         <specialist.Icon className={`w-6 h-6 ${specialist.classes.text}`} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800">{specialist.name}</h2>
-                        <p className="text-sm text-gray-500">{specialist.role}</p>
+                        <h2 className="text-xl font-bold text-ink">{specialist.name}</h2>
+                        <p className="text-sm text-slate-ink">{specialist.role}</p>
                     </div>
                 </div>
             </header>
 
-            <main className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50">
+            <main className="flex-1 overflow-y-auto p-6 space-y-6 bg-paper">
                 {messages.map((msg, index) => (
                     <div key={index}>
                         <div className={`flex items-end gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.sender === 'ai' && (
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white ${specialist.classes.bg}`}>
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-paper ${specialist.classes.bg}`}>
                                     <specialist.Icon className={`w-5 h-5 ${specialist.classes.text}`} />
                                 </div>
                             )}
-                            <div className={`max-w-md lg:max-w-lg p-3 rounded-2xl shadow-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white text-gray-800 rounded-bl-none'}`}>
+                            <div className={`max-w-md lg:max-w-lg p-3 rounded-sm ${msg.sender === 'user' ? 'bg-ink text-paper rounded-br-none' : 'bg-linen text-ink rounded-bl-none'}`}>
                                <MarkdownRenderer content={msg.text} />
                             </div>
                         </div>
@@ -139,14 +139,14 @@ const BrandCoreCoach: React.FC<BrandCoreCoachProps> = ({ specialist, onBack, bus
                             <div className="mt-3 flex justify-start pl-11 gap-2">
                                 <button
                                     onClick={() => handleConfirmation(true, msg.coreValue ?? '')}
-                                    className="px-4 py-2 text-sm bg-indigo-600 text-white font-semibold rounded-full hover:bg-indigo-700 disabled:opacity-50"
+                                    className="px-4 py-2 text-sm bg-ink text-paper font-semibold rounded-full hover:bg-carbon disabled:opacity-50"
                                     disabled={isLoading}
                                 >
                                     네, 아주 좋아요!
                                 </button>
                                 <button 
                                     onClick={() => handleConfirmation(false, msg.coreValue ?? '')} 
-                                    className="px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 font-semibold rounded-full hover:bg-gray-100 disabled:opacity-50"
+                                    className="px-4 py-2 text-sm bg-linen border border-rule text-carbon font-semibold rounded-full hover:bg-parchment disabled:opacity-50"
                                     disabled={isLoading}
                                 >
                                     음, 조금 다듬어볼까요?
@@ -157,10 +157,10 @@ const BrandCoreCoach: React.FC<BrandCoreCoachProps> = ({ specialist, onBack, bus
                 ))}
                  {isLoading && (
                      <div className="flex items-end gap-3 justify-start">
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white ${specialist.classes.bg}`}>
+                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-paper ${specialist.classes.bg}`}>
                             <specialist.Icon className={`w-5 h-5 ${specialist.classes.text}`} />
                         </div>
-                        <div className="max-w-md lg:max-w-lg p-3 rounded-2xl bg-white text-gray-800 rounded-bl-none shadow-sm">
+                        <div className="max-w-md lg:max-w-lg p-3 rounded-sm bg-linen text-ink rounded-bl-none border border-rule">
                             <div className="flex items-center gap-2">
                                 <SpinnerIcon className="w-5 h-5 animate-spin"/>
                                 <span>잠시 생각 중입니다...</span>
@@ -171,7 +171,7 @@ const BrandCoreCoach: React.FC<BrandCoreCoachProps> = ({ specialist, onBack, bus
                 <div ref={chatEndRef} />
             </main>
             
-            <footer className="p-4 border-t border-gray-200 bg-white">
+            <footer className="p-4 border-t border-rule bg-linen">
                  <div className="relative">
                     <input
                         type="text"
@@ -179,13 +179,13 @@ const BrandCoreCoach: React.FC<BrandCoreCoachProps> = ({ specialist, onBack, bus
                         onChange={(e) => setUserInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleUserSubmit()}
                         placeholder={isInputDisabled ? "AI의 답변을 기다려주세요..." : "여기에 답변을 입력하세요..."}
-                        className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full p-3 pr-12 border border-rule rounded-sm focus:ring-ink focus:border-ink"
                         disabled={isInputDisabled}
                     />
                     <button
                         onClick={handleUserSubmit}
                         disabled={!userInput.trim() || isInputDisabled}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-ink text-paper hover:bg-carbon disabled:bg-rule-strong disabled:cursor-not-allowed"
                     >
                         <PaperAirplaneIcon className="w-5 h-5" />
                     </button>
