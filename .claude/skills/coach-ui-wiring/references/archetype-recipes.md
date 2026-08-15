@@ -118,7 +118,7 @@ case '{new-stage}-chat':
 get{Name}Coaching,
 ```
 
-### 7-a. greeting useEffect (App.tsx:95) — 빠뜨리기 쉬움
+### 7-a. greeting useEffect (App.tsx:96) — 빠뜨리기 쉬움
 stage 목록에 OR 조건을 추가한다:
 ```ts
 useEffect(() => {
@@ -130,7 +130,7 @@ useEffect(() => {
 ```
 **누락 시**: 채팅창이 인사말 없이 비어서 시작한다.
 
-### 7-b. dispatch switch (App.tsx:335) — 가장 치명적
+### 7-b. dispatch switch (App.tsx:353) — 가장 치명적
 `handleSpecialistChatQuery` 안의 **이름 기반** switch에 case를 추가한다:
 ```ts
 switch (currentSpecialist.name) {
@@ -180,7 +180,7 @@ switch (currentSpecialist.name) {
 },
 ```
 
-> `action` 내부에서 자기 자신(Specialist 객체)을 참조할 수 없다. 기존 코치들은 `selectedSpecialist`를 쓴다 — `handleSpecialistSelect`가 `action` 호출 전에 이미 세팅해두기 때문이다 (App.tsx:688, 693). 따라서 `setConversation([{ author: selectedSpecialist!, text: result }])` 형태로 쓰거나, 기존 코치(마케터 제인)의 구현을 그대로 따른다.
+> `action` 내부에서 자기 자신(Specialist 객체)을 참조할 수 없다. 기존 코치들은 `selectedSpecialist`를 쓴다 — `handleSpecialistSelect`가 `action` 호출 전에 이미 세팅해두기 때문이다 (App.tsx:706, 693). 따라서 `setConversation([{ author: selectedSpecialist!, text: result }])` 형태로 쓰거나, 기존 코치(마케터 제인)의 구현을 그대로 따른다.
 
 ### 1, 4. AppStage 타입 / render case — 추가하지 않음
 공용 `'analysis'` stage와 `AnalysisResult` 화면을 그대로 쓴다.
@@ -192,7 +192,7 @@ switch (currentSpecialist.name) {
 
 ## 아키타입 D — 자체 완결형
 
-컴포넌트가 직접 geminiService를 호출하고 자체 상태를 관리한다. App.tsx는 stage 분기만 한다. 배선 4곳.
+컴포넌트가 직접 coachApi를 호출하고 자체 상태를 관리한다. App.tsx는 stage 분기만 한다. 배선 4곳.
 
 ### 1. AppStage 타입
 ```ts
@@ -235,11 +235,11 @@ export interface Specialist {
 ### 사용자 흐름 (모든 아키타입 공통)
 ```
 Dashboard 카드 클릭
-  → handleSpecialistSelect (App.tsx:688)
+  → handleSpecialistSelect (App.tsx:706)
       setSelectedSpecialist(specialist) + setStage('greeting')
   → SpecialistGreeting 화면 (greeting 전문 노출)
   → "시작하기" 클릭
-  → handleProceedFromGreeting (App.tsx:693)
+  → handleProceedFromGreeting (App.tsx:711)
       selectedSpecialist.action() 호출
   → 아키타입별 분기
 ```

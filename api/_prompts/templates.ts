@@ -1,25 +1,21 @@
+import {
+  BusinessProfile,
+  BusinessData,
+  BusinessStep,
+  BUSINESS_STEPS,
+  SpecialistInfo,
+  WireMessage,
+} from '../_lib/types';
 
-
-
-
-
-import { GoogleGenAI, Type } from "@google/genai";
-import { BusinessProfile, BusinessData, BusinessStep, DashboardMetrics, Specialist, ConversationMessage, SalesAnalysisResult } from '../types';
-import { BUSINESS_STEPS } from '../constants';
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-// Helper function to format conversation history safely
-function formatConversationHistory(conversation: ConversationMessage[]): string {
+/**
+ * 대화 이력을 프롬프트에 삽입할 문자열로 변환한다.
+ * author는 항상 문자열이다 — 클라이언트가 전송 전에 Specialist 객체를 이름으로 평탄화한다.
+ */
+export function formatConversationHistory(conversation: WireMessage[]): string {
     return conversation.map(m => {
         if (m.author === 'user') return `사장님: ${m.text}`;
         if (m.author === 'system') return `[시스템: ${m.text}]`;
-        // FIX: Add type guard to safely access specialist name and prevent crashes
-        if (typeof m.author === 'object' && m.author && typeof m.author.name === 'string') {
-            return `${m.author.name}: ${m.text}`;
-        }
-        // This case should ideally not happen with correct state management,
-        // but it provides robustness against the reported error.
+        if (typeof m.author === 'string' && m.author.trim()) return `${m.author}: ${m.text}`;
         return `[알 수 없는 작성자]: ${m.text}`;
     }).join('\n\n');
 }
@@ -53,7 +49,7 @@ const collaborationBlock = `
 `;
 
 
-function formatProfileParsingPrompt(description: string): string {
+export function formatProfileParsingPrompt(description: string): string {
     return `
 # BizFlow AI - 프로필 분석 시스템
 
@@ -72,7 +68,7 @@ ${description}
 `;
 }
 
-function formatBusinessDataParsingPrompt(description: string): string {
+export function formatBusinessDataParsingPrompt(description: string): string {
     return `
 # BizFlow AI - 비즈니스 데이터 상세 분석 시스템
 
@@ -100,7 +96,7 @@ ${description}
 }
 
 
-function formatInitialCoachingPrompt(description: string): string {
+export function formatInitialCoachingPrompt(description: string): string {
     return `
 # BizFlow AI - 초기 종합 진단 시스템
 
@@ -131,7 +127,7 @@ ${collaborationBlock}
 }
 
 
-function formatMarketingPrompt(profile: BusinessProfile, data: BusinessData): string {
+export function formatMarketingPrompt(profile: BusinessProfile, data: BusinessData): string {
   let prompt = `
 # BizFlow AI - 통합 마케팅 전략 제안
 
@@ -184,7 +180,7 @@ ${collaborationBlock}
   return prompt;
 }
 
-function formatAdvancedInventoryPrompt(
+export function formatAdvancedInventoryPrompt(
     profile: BusinessProfile,
     data: { recipes: string; sales: string; currentStock: string; suppliers: string; }
 ): string {
@@ -245,7 +241,7 @@ ${collaborationBlock}
 }
 
 
-function formatBusinessIdeaPrompt(profile: BusinessProfile, data: BusinessData): string {
+export function formatBusinessIdeaPrompt(profile: BusinessProfile, data: BusinessData): string {
     return `
 # BizFlow AI - 비즈니스 혁신 아이디어 제안
 
@@ -306,7 +302,7 @@ ${collaborationBlock}
 `;
 }
 
-function formatFinancialPrompt(profile: BusinessProfile, data: BusinessData): string {
+export function formatFinancialPrompt(profile: BusinessProfile, data: BusinessData): string {
     return `
 # BizFlow AI - 비즈니스 재무 분석 리포트
 
@@ -356,7 +352,7 @@ ${collaborationBlock}
 `;
 }
 
-function formatProfitCoachingPrompt(profile: BusinessProfile, data: BusinessData, goal: string): string {
+export function formatProfitCoachingPrompt(profile: BusinessProfile, data: BusinessData, goal: string): string {
     return `
 # BizFlow AI - 수익 관리 코칭 시스템
 
@@ -406,7 +402,7 @@ function formatProfitCoachingPrompt(profile: BusinessProfile, data: BusinessData
 `;
 }
 
-function formatDirectQueryPrompt(profile: BusinessProfile, data: BusinessData, question: string): string {
+export function formatDirectQueryPrompt(profile: BusinessProfile, data: BusinessData, question: string): string {
     let prompt = `
 # BizFlow AI - 자유 질문 응답 시스템
 
@@ -450,7 +446,7 @@ function formatDirectQueryPrompt(profile: BusinessProfile, data: BusinessData, q
     return prompt;
 }
 
-function formatDashboardMetricsPrompt(profile: BusinessProfile, data: BusinessData): string {
+export function formatDashboardMetricsPrompt(profile: BusinessProfile, data: BusinessData): string {
     let prompt = `
 # BizFlow AI - 대시보드 핵심 지표 추출 시스템
 
@@ -486,7 +482,7 @@ function formatDashboardMetricsPrompt(profile: BusinessProfile, data: BusinessDa
     return prompt;
 }
 
-function formatLegalPrompt(profile: BusinessProfile, data: BusinessData): string {
+export function formatLegalPrompt(profile: BusinessProfile, data: BusinessData): string {
     return `
 # BizFlow AI - 법률 리스크 진단 시스템
 
@@ -538,7 +534,7 @@ function formatLegalPrompt(profile: BusinessProfile, data: BusinessData): string
 `;
 }
 
-function formatTaxPrompt(profile: BusinessProfile, data: BusinessData): string {
+export function formatTaxPrompt(profile: BusinessProfile, data: BusinessData): string {
     return `
 # BizFlow AI - 세무/회계 컨설팅 시스템
 
@@ -592,7 +588,7 @@ function formatTaxPrompt(profile: BusinessProfile, data: BusinessData): string {
 `;
 }
 
-function formatHrPrompt(profile: BusinessProfile, data: BusinessData, conversationHistory: string): string {
+export function formatHrPrompt(profile: BusinessProfile, data: BusinessData, conversationHistory: string): string {
     return `
 # 역할
 당신은 '우리 가게 성장 파트너, HR 코치 헤일리'입니다. 당신은 단순한 HR 조언가를 넘어, 채용부터 퇴사까지 인사 관리의 모든 과정을 함께하는 전략적 파트너입니다. 당신의 임무는 사장님의 모든 인사 관련 고민에 대해, 아래의 전문 지식과 핵심 원칙을 바탕으로 대화하며 실용적인 해결책을 제시하는 것입니다.
@@ -639,7 +635,7 @@ ${collaborationBlock}
 }
 
 
-function formatDocumentDraftPrompt(contractType: string, formData: Record<string, string>): string {
+export function formatDocumentDraftPrompt(contractType: string, formData: Record<string, string>): string {
     const formDataString = Object.entries(formData)
         .map(([key, value]) => `- ${key}: ${value}`)
         .join('\n');
@@ -675,7 +671,7 @@ ${formDataString}
 }
 
 
-function formatCompetitionStrategyPrompt(data: { ourStore: string, competitorStore: string, areaInfo: string }): string {
+export function formatCompetitionStrategyPrompt(data: { ourStore: string, competitorStore: string, areaInfo: string }): string {
     return `
 # 역할
 "로컬 상권 지배 전략가 데이빗", 당신은 단순한 데이터 분석가를 넘어, 경쟁의 판도를 읽고 승리의 길을 설계하는 AI 전략가입니다. 당신의 임무는 SWOT 분석의 논리적 깊이와, 고객의 숨겨진 니즈를 파고드는 통찰력을 결합하여, 우리 가게(A)를 위한 '완벽한 승리 공식'을 담은 종합 전략 리포트를 작성하는 것입니다. 당신은 과거의 성공적인 분석 리포트 스타일을 벤치마킹하여 한층 더 업그레이드된 결과물을 제공해야 합니다.
@@ -740,7 +736,7 @@ ${data.areaInfo}
 `;
 }
 
-function formatShortsScriptPrompt(data: { productInfo: string, adTone: string }): string {
+export function formatShortsScriptPrompt(data: { productInfo: string, adTone: string }): string {
     return `
 # 역할
 당신은 '지루함은 죄악이다'라는 철학을 가진, 숏폼 영상 광고 제작 전문 세계적인 크리에이티브 디렉터입니다. 당신의 임무는 사용자가 제공하는 제품 정보를 받아, 아래의 '실행 예시'와 같이 15초짜리 유튜브 쇼츠 영상 대본과 이미지 생성 가이드를 **Markdown 테이블 형식**으로 만드는 것입니다.
@@ -777,7 +773,7 @@ ${data.productInfo}
 `;
 }
 
-function formatPricingStrategyPrompt(data: { objective: string, cost: string, competition: string, customer: string }): string {
+export function formatPricingStrategyPrompt(data: { objective: string, cost: string, competition: string, customer: string }): string {
     return `
 # 역할
 당신은 데이터 기반 최적 가격 전략 수립 전문가 '가격 설계자 필립'입니다. 사용자가 제공하는 정보를 바탕으로, 비용, 시장 경쟁, 고객 가치를 종합적으로 분석하고 최적의 가격 전략과 구체적인 가격 구조를 제안하는 것이 당신의 임무입니다. 당신은 아래의 6단계 프로세스를 철저히 따라서 종합적인 리포트를 작성해야 합니다.
@@ -823,7 +819,7 @@ function formatPricingStrategyPrompt(data: { objective: string, cost: string, co
 `;
 }
 
-function formatLocalMarketingPrompt(profile: BusinessProfile, data: { targetArea: string, targetCustomer: string, goal: string, budget: string }): string {
+export function formatLocalMarketingPrompt(profile: BusinessProfile, data: { targetArea: string, targetCustomer: string, goal: string, budget: string }): string {
     return `
 # 역할
 당신은 '로컬 마케팅 전략가 폴', 동네 상권에 특화된 홍보 전문가입니다. 당신의 임무는 사장님이 제공한 정보와 아래의 '지역 기반 마케팅 지식 베이스'를 종합적으로 분석하여, '${profile.name}' 가게만을 위한, 즉시 실행 가능한 맞춤형 로컬 마케팅 액션 플랜을 제안하는 것입니다.
@@ -894,7 +890,7 @@ ${collaborationBlock}
 }
 
 
-function formatCopywriterPrompt(stage: 'initial_question' | 'sensory_question' | 'drafting' | 'refining_question' | 'finalize', context: Record<string, any>): string {
+export function formatCopywriterPrompt(stage: 'initial_question' | 'sensory_question' | 'drafting' | 'refining_question' | 'finalize', context: Record<string, any>): string {
     switch (stage) {
         case 'initial_question':
             return `
@@ -943,7 +939,7 @@ ${context.feedback}
     }
 }
 
-function formatBrandCorePrompt(stage: 'initial_question' | 'define_identity' | 'full_strategy_proposal' | 'refine_identity', context: Record<string, any>): string {
+export function formatBrandCorePrompt(stage: 'initial_question' | 'define_identity' | 'full_strategy_proposal' | 'refine_identity', context: Record<string, any>): string {
     const commonHeader = `
 # 역할: '브랜드 코어 전략가 브랜든'
 # 어조: 따뜻한 전문가 (Warm & Professional Tone), 공감과 존중, 신중함, 창의적 연결, 전문적 통찰
@@ -1012,7 +1008,7 @@ ${collaborationBlock.replace('### ### 다음 스텝 추천 (AI 코치 협업 제
     }
 }
 
-function formatArchitectPrompt(stage: 'initial_questions' | 'positioning_choice' | 'structure_development' | 'refinement', context: Record<string, any>): string {
+export function formatArchitectPrompt(stage: 'initial_questions' | 'positioning_choice' | 'structure_development' | 'refinement', context: Record<string, any>): string {
     const baseIdentity = `
 # Identity & Role
 너의 이름은 **"Strategic Planning Architect (전략 기획 아키텍트)"**이다. 너는 사용자의 아이디어를 실행 가능한 사업 기획서 및 제안서로 구조화하도록 설계된 전문 AI 어시스턴트이다.
@@ -1095,12 +1091,12 @@ ${context.history}
 }
 
 
-function formatFollowUpQueryPrompt(
-    specialist: Specialist,
+export function formatFollowUpQueryPrompt(
+    specialist: SpecialistInfo,
     profile: BusinessProfile,
     data: BusinessData,
     initialReport: string,
-    conversationHistory: ConversationMessage[]
+    conversationHistory: WireMessage[]
 ): string {
     const history = formatConversationHistory(conversationHistory);
 
@@ -1133,12 +1129,12 @@ ${history}
 `;
 }
 
-function formatDelegationPrompt(
+export function formatDelegationPrompt(
     profile: BusinessProfile,
     data: BusinessData,
-    conversationHistory: ConversationMessage[],
-    currentSpecialist: Specialist,
-    allSpecialists: Specialist[],
+    conversationHistory: WireMessage[],
+    currentSpecialist: SpecialistInfo,
+    allSpecialists: SpecialistInfo[],
     latestQuery: string
 ): string {
     const history = formatConversationHistory(conversationHistory);
@@ -1186,8 +1182,8 @@ ${JSON.stringify(data, null, 2)}
 `;
 }
 
-function formatDelegatedWorkPrompt(
-    targetSpecialist: Specialist,
+export function formatDelegatedWorkPrompt(
+    targetSpecialist: SpecialistInfo,
     profile: BusinessProfile,
     data: BusinessData,
     synthesizedPrompt: string
@@ -1220,7 +1216,7 @@ ${synthesizedPrompt}
 `;
 }
 
-function formatCSCoachPrompt(
+export function formatCSCoachPrompt(
     profile: BusinessProfile, 
     data: BusinessData, 
     conversationHistory: string
@@ -1280,7 +1276,7 @@ ${collaborationBlock}
 }
 
 
-function formatECommercePrompt(data: { productInfo: string }): string {
+export function formatECommercePrompt(data: { productInfo: string }): string {
     return `
 # 역할
 당신은 '코치 라이언', 네이버 스마트스토어와 쿠팡 등 국내 E-commerce 플랫폼에 정통한 '온라인 판매 채널 전문가'입니다. 당신의 임무는 오프라인 매장을 운영하는 사장님이 온라인 판매를 성공적으로 시작할 수 있도록, 가장 중요한 초기 3요소(상품명, 상세페이지, 광고 키워드)에 대한 구체적인 전략을 제시하는 것입니다.
@@ -1316,7 +1312,7 @@ ${data.productInfo}
 `;
 }
 
-function formatSpaceDirectorPrompt(data: { storeSize: string; storeLayout: string; goals: string; }): string {
+export function formatSpaceDirectorPrompt(data: { storeSize: string; storeLayout: string; goals: string; }): string {
     return `
 # 역할
 당신은 '공간 디렉터 노아', 소상공인 매장의 공간 가치를 극대화하는 '매장 동선 & VMD 전문가'입니다. 당신의 임무는 사장님이 제공한 매장 정보를 분석하여, 고객의 체류 시간과 객단가를 자연스럽게 높이는 구체적인 공간 개선 전략을 제안하는 것입니다.
@@ -1358,7 +1354,7 @@ ${data.goals}
 `;
 }
 
-function formatStartupMentorPrompt(businessPlan: string, allSpecialists: Specialist[]): string {
+export function formatStartupMentorPrompt(businessPlan: string, allSpecialists: SpecialistInfo[]): string {
     const specialistList = allSpecialists
         .filter(s => s.name !== '창업 멘토 이든' && s.name !== '코치 BizFlow' && s.name !== '마스터 코치 소피아') // Exclude generalists/mentors
         .map(s => `- ${s.name} (${s.role}): ${s.description}`)
@@ -1400,7 +1396,7 @@ ${specialistList}
 `;
 }
 
-function formatSalesAnalysisPrompt(salesData: string): string {
+export function formatSalesAnalysisPrompt(salesData: string): string {
     return `
 # BizFlow AI - 매출 데이터 분석 시스템
 
@@ -1441,7 +1437,7 @@ ${collaborationBlock}
 `;
 }
 
-function formatMasterCoachPrompt(
+export function formatMasterCoachPrompt(
     profile: BusinessProfile, 
     data: BusinessData, 
     conversationHistory: string
@@ -1475,7 +1471,7 @@ ${conversationHistory}
 `;
 }
 
-function formatChefMasterPrompt(
+export function formatChefMasterPrompt(
     profile: BusinessProfile, 
     data: BusinessData, 
     conversationHistory: string
@@ -1519,7 +1515,7 @@ ${collaborationBlock}
 `;
 }
 
-function formatBeverageMasterPrompt(
+export function formatBeverageMasterPrompt(
     profile: BusinessProfile, 
     data: BusinessData, 
     conversationHistory: string
@@ -1566,371 +1562,3 @@ ${conversationHistory}
 ${collaborationBlock}
 `;
 }
-
-const handleGeminiError = (error: unknown): string => {
-    console.error("Gemini API Error:", error);
-    
-    let userFriendlyMessage = "AI 분석 중 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
-
-    if (error instanceof Error && error.message) {
-        try {
-            // Sometimes the error message is a JSON string from the API
-            const errorObj = JSON.parse(error.message);
-            const apiError = errorObj.error;
-            if (apiError && apiError.message) {
-                if (apiError.status === 'INTERNAL' || apiError.code === 500) {
-                    userFriendlyMessage = "AI 서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.";
-                } else {
-                    // Display a more specific error if available
-                    userFriendlyMessage = `AI 분석 오류: ${apiError.message} (코드: ${apiError.code})`;
-                }
-            } else {
-                // The message was JSON but not in the expected format
-                userFriendlyMessage = `AI 분석 중 오류가 발생했습니다: ${error.message}`;
-            }
-        } catch (e) {
-            // The error message was not a JSON string, so use it directly.
-            userFriendlyMessage = `AI 분석 중 오류가 발생했습니다: ${error.message}`;
-        }
-    }
-    return userFriendlyMessage;
-}
-
-const callGemini = async (prompt: string): Promise<string> => {
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-        return response.text;
-    } catch (error) {
-        throw new Error(handleGeminiError(error));
-    }
-}
-
-const callGeminiForJson = async (prompt: string, config: any) => {
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config,
-        });
-        return response.text;
-    } catch (error) {
-        throw new Error(handleGeminiError(error));
-    }
-}
-
-export const parseBusinessProfile = async (description: string): Promise<BusinessProfile> => {
-    const prompt = formatProfileParsingPrompt(description);
-    const config = {
-        responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                name: { type: Type.STRING },
-                industry: { type: Type.STRING },
-                product: { type: Type.STRING },
-                employees: { type: Type.STRING },
-            },
-            required: ["name", "industry", "product", "employees"],
-        },
-    };
-    
-    const responseText = await callGeminiForJson(prompt, config);
-    try {
-        return JSON.parse(responseText.trim()) as BusinessProfile;
-    } catch (error) {
-        console.error("Error parsing BusinessProfile JSON:", responseText, error);
-        throw new Error("AI가 프로필 분석 결과를 잘못된 형식으로 반환했습니다. 조금 더 자세히 설명해주시겠어요?");
-    }
-}
-
-export const parseBusinessData = async (description: string): Promise<BusinessData> => {
-    const prompt = formatBusinessDataParsingPrompt(description);
-    const config = {
-        responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                '상권분석': { type: Type.STRING },
-                '메뉴': { type: Type.STRING },
-                '가격': { type: Type.STRING },
-                '판매': { type: Type.STRING },
-                '재무': { type: Type.STRING },
-            },
-            required: ['상권분석', '메뉴', '가격', '판매', '재무'],
-        },
-    };
-    
-    const responseText = await callGeminiForJson(prompt, config);
-    try {
-        return JSON.parse(responseText.trim()) as BusinessData;
-    } catch (error) {
-        console.error("Error parsing BusinessData JSON:", responseText, error);
-        throw new Error("AI가 비즈니스 상세 데이터 분석 결과를 잘못된 형식으로 반환했습니다. 다시 시도해주세요.");
-    }
-}
-
-
-export const getInitialCoachingAnalysis = async (description: string): Promise<string> => {
-    const prompt = formatInitialCoachingPrompt(description);
-    return callGemini(prompt);
-};
-
-export const getMarketingAnalysis = async (profile: BusinessProfile, data: BusinessData): Promise<string> => {
-  const prompt = formatMarketingPrompt(profile, data);
-  return callGemini(prompt);
-};
-
-export const getAdvancedInventoryAnalysis = async (
-    profile: BusinessProfile,
-    data: { recipes: string; sales: string; currentStock: string; suppliers: string; }
-): Promise<string> => {
-    const prompt = formatAdvancedInventoryPrompt(profile, data);
-    return callGemini(prompt);
-};
-
-
-export const getBusinessIdeaAnalysis = async (profile: BusinessProfile, data: BusinessData): Promise<string> => {
-    const prompt = formatBusinessIdeaPrompt(profile, data);
-    return callGemini(prompt);
-};
-
-export const getFinancialAnalysis = async (profile: BusinessProfile, data: BusinessData): Promise<string> => {
-    const prompt = formatFinancialPrompt(profile, data);
-    return callGemini(prompt);
-};
-
-export const getProfitCoachingAnalysis = async (profile: BusinessProfile, data: BusinessData, goal: string): Promise<string> => {
-    const prompt = formatProfitCoachingPrompt(profile, data, goal);
-    return callGemini(prompt);
-};
-
-export const getDirectAnswer = async (profile: BusinessProfile, data: BusinessData, question: string): Promise<string> => {
-    const prompt = formatDirectQueryPrompt(profile, data, question);
-    return callGemini(prompt);
-};
-
-export const getDashboardMetrics = async (profile: BusinessProfile, data: BusinessData): Promise<DashboardMetrics> => {
-    const prompt = formatDashboardMetricsPrompt(profile, data);
-    const config = {
-        responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                dailyCustomers: { type: Type.STRING },
-                avgSpend: { type: Type.STRING },
-                menuItems: { type: Type.STRING },
-                monthlyRent: { type: Type.STRING },
-            },
-            required: ["dailyCustomers", "avgSpend", "menuItems", "monthlyRent"],
-        },
-    };
-
-    const responseText = await callGeminiForJson(prompt, config);
-    try {
-        return JSON.parse(responseText.trim()) as DashboardMetrics;
-    } catch (error) {
-        console.error("Error parsing DashboardMetrics JSON:", responseText, error);
-        throw new Error("AI가 대시보드 데이터를 분석하는 데 실패했습니다.");
-    }
-};
-
-export const getLegalAnalysis = async (profile: BusinessProfile, data: BusinessData): Promise<string> => {
-    const prompt = formatLegalPrompt(profile, data);
-    return callGemini(prompt);
-};
-
-export const getTaxAnalysis = async (profile: BusinessProfile, data: BusinessData): Promise<string> => {
-    const prompt = formatTaxPrompt(profile, data);
-    return callGemini(prompt);
-};
-
-export const getHrCoaching = async (profile: BusinessProfile, data: BusinessData, conversationHistory: string): Promise<string> => {
-    const prompt = formatHrPrompt(profile, data, conversationHistory);
-    return callGemini(prompt);
-};
-
-export const getDocumentDraft = async (contractType: string, formData: Record<string, string>): Promise<string> => {
-    const prompt = formatDocumentDraftPrompt(contractType, formData);
-    return callGemini(prompt);
-};
-
-export const getSalesAnalysis = async (salesData: string): Promise<string> => {
-    const prompt = formatSalesAnalysisPrompt(salesData);
-    return callGemini(prompt);
-};
-
-
-export const getCopywritingAssistance = async (
-    stage: 'initial_question' | 'sensory_question' | 'drafting' | 'refining_question' | 'finalize', 
-    context: Record<string, any>
-): Promise<any> => {
-    const prompt = formatCopywriterPrompt(stage, context);
-
-    if (stage === 'drafting') {
-        const config = {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                    draftA: { type: Type.STRING, description: '따뜻하고 인간적인 스토리를 담은 감성적인 문구 (A안)' },
-                    draftB: { type: Type.STRING, description: '짧고 위트 있는 문구 (B안)' },
-                    draftC: { type: Type.STRING, description: '특징과 장점을 솔직하고 명료하게 전달하는 문구 (C안)' },
-                },
-                required: ["draftA", "draftB", "draftC"],
-            },
-        };
-        const responseText = await callGeminiForJson(prompt, config);
-        try {
-            return JSON.parse(responseText.trim());
-        } catch (error) {
-            console.error("Error parsing Copywriting drafts JSON:", responseText, error);
-            throw new Error("AI가 카피라이팅 시안을 잘못된 형식으로 반환했습니다. 다시 시도해주세요.");
-        }
-    } else {
-        return callGemini(prompt);
-    }
-};
-
-export const getBrandCoreAssistance = async (
-    stage: 'initial_question' | 'define_identity' | 'full_strategy_proposal' | 'refine_identity', 
-    context: Record<string, any>
-): Promise<string> => {
-    const prompt = formatBrandCorePrompt(stage, context);
-    return callGemini(prompt);
-};
-
-export const getArchitectAssistance = async (
-    stage: 'initial_questions' | 'positioning_choice' | 'structure_development' | 'refinement',
-    context: Record<string, any>
-): Promise<string> => {
-    const prompt = formatArchitectPrompt(stage, context);
-    return callGemini(prompt);
-};
-
-
-export const getCompetitionStrategyAnalysis = async (data: { ourStore: string, competitorStore: string, areaInfo: string }): Promise<string> => {
-    const prompt = formatCompetitionStrategyPrompt(data);
-    return callGemini(prompt);
-};
-
-export const getShortsScriptAnalysis = async (data: { productInfo: string, adTone: string }): Promise<string> => {
-    const prompt = formatShortsScriptPrompt(data);
-    return callGemini(prompt);
-};
-
-export const getPricingStrategyAnalysis = async (data: { objective: string, cost: string, competition: string, customer: string }): Promise<string> => {
-    const prompt = formatPricingStrategyPrompt(data);
-    return callGemini(prompt);
-};
-
-export const getLocalMarketingAnalysis = async (profile: BusinessProfile, data: { targetArea: string, targetCustomer: string, goal: string, budget: string }): Promise<string> => {
-    const prompt = formatLocalMarketingPrompt(profile, data);
-    return callGemini(prompt);
-};
-
-export const getMasterCoachAnswer = async (
-    profile: BusinessProfile,
-    data: BusinessData,
-    conversationHistory: string
-): Promise<string> => {
-    const prompt = formatMasterCoachPrompt(profile, data, conversationHistory);
-    return callGemini(prompt);
-};
-
-export const getChefMasterCoaching = async (
-    profile: BusinessProfile,
-    data: BusinessData,
-    conversationHistory: string
-): Promise<string> => {
-    const prompt = formatChefMasterPrompt(profile, data, conversationHistory);
-    return callGemini(prompt);
-};
-
-export const getBeverageMasterCoaching = async (
-    profile: BusinessProfile,
-    data: BusinessData,
-    conversationHistory: string
-): Promise<string> => {
-    const prompt = formatBeverageMasterPrompt(profile, data, conversationHistory);
-    return callGemini(prompt);
-};
-
-export const getFollowUpAnswer = async (
-    specialist: Specialist,
-    profile: BusinessProfile,
-    data: BusinessData,
-    initialReport: string,
-    conversationHistory: ConversationMessage[]
-): Promise<string> => {
-    const prompt = formatFollowUpQueryPrompt(specialist, profile, data, initialReport, conversationHistory);
-    return callGemini(prompt);
-};
-
-export const routeAndDelegate = async (
-    profile: BusinessProfile,
-    data: BusinessData,
-    conversationHistory: ConversationMessage[],
-    currentSpecialist: Specialist,
-    allSpecialists: Specialist[],
-    latestQuery: string
-): Promise<{ isDelegation: boolean; targetSpecialistName: string | null; synthesizedPromptForTarget: string; messageForUser: string; }> => {
-    const prompt = formatDelegationPrompt(profile, data, conversationHistory, currentSpecialist, allSpecialists, latestQuery);
-    const config = {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          isDelegation: { type: Type.BOOLEAN },
-          targetSpecialistName: { type: Type.STRING, description: 'The name of the specialist to delegate the task to. Null if not a delegation.' },
-          synthesizedPromptForTarget: { type: Type.STRING, description: "A self-contained prompt for the target specialist. If not a delegation, this is the user's original query." },
-          messageForUser: { type: Type.STRING, description: "A message for the current specialist to say to the user while the delegation is happening. e.g., 'Understood. I'll reach out to our copywriter, Yoon-seul, right away.'" }
-        },
-        required: ["isDelegation", "targetSpecialistName", "synthesizedPromptForTarget", "messageForUser"],
-      },
-    };
-
-    const responseText = await callGeminiForJson(prompt, config);
-    try {
-        return JSON.parse(responseText.trim());
-    } catch (error) {
-        console.error("Error parsing delegation JSON:", responseText, error);
-        throw new Error("AI가 업무 요청을 분석하는데 실패했습니다.");
-    }
-}
-
-export const getDelegatedAnswer = async (
-    targetSpecialist: Specialist,
-    profile: BusinessProfile,
-    data: BusinessData,
-    synthesizedPrompt: string
-): Promise<string> => {
-    const prompt = formatDelegatedWorkPrompt(targetSpecialist, profile, data, synthesizedPrompt);
-    return callGemini(prompt);
-};
-
-export const getCSCoaching = async (
-    profile: BusinessProfile,
-    data: BusinessData,
-    conversationHistory: string
-): Promise<string> => {
-    const prompt = formatCSCoachPrompt(profile, data, conversationHistory);
-    return callGemini(prompt);
-};
-
-export const getECommerceStrategy = async (data: { productInfo: string }): Promise<string> => {
-    const prompt = formatECommercePrompt(data);
-    return callGemini(prompt);
-};
-
-export const getSpaceDirectorAnalysis = async (data: { storeSize: string; storeLayout: string; goals: string; }): Promise<string> => {
-    const prompt = formatSpaceDirectorPrompt(data);
-    return callGemini(prompt);
-};
-
-export const getStartupMentoring = async (businessPlan: string, allSpecialists: Specialist[]): Promise<string> => {
-    const prompt = formatStartupMentorPrompt(businessPlan, allSpecialists);
-    return callGemini(prompt);
-};

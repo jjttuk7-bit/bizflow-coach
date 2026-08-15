@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Specialist, BusinessProfile } from '../types';
-import { getArchitectAssistance } from '../services/geminiService';
+import { getArchitectAssistance } from '../services/coachApi';
 import { ArrowLeftIcon, PaperAirplaneIcon, SpinnerIcon } from './icons';
 import MarkdownRenderer from './MarkdownRenderer';
 

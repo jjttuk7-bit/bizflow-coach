@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Specialist } from '../types';
-import { getStartupMentoring } from '../services/geminiService';
+import { getStartupMentoring } from '../services/coachApi';
 import { ArrowLeftIcon, SparklesIcon, SpinnerIcon } from './icons';
 import MarkdownRenderer from './MarkdownRenderer';
 

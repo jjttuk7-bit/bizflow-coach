@@ -18,7 +18,7 @@ description: "BizFlow Coach의 신규·수정된 코치 모듈을 경계면 교�
 
 | 우회 경로 | 결과 |
 |---|---|
-| `callGemini`가 `Promise<string>` 반환 | 프롬프트가 무엇을 출력하든 타입 통과. 출력 형식 불일치는 컴파일러가 절대 못 잡는다 |
+| `callText`가 `Promise<string>` 반환 | 프롬프트가 무엇을 출력하든 타입 통과. 출력 형식 불일치는 컴파일러가 절대 못 잡는다 |
 | dispatch switch가 **문자열** 비교 | 코치 이름 오타·누락을 컴파일러가 못 잡는다. default로 조용히 빠진다 |
 | `JSON.parse` 결과 캐스팅 | responseSchema와 TS 타입이 달라도 통과 |
 | 두 파라미터가 모두 `string` | 인자 순서가 바뀌어도 통과 |
@@ -35,7 +35,7 @@ description: "BizFlow Coach의 신규·수정된 코치 모듈을 경계면 교�
 
 | | |
 |---|---|
-| 생산자 | `geminiService.ts`의 `format*Prompt` → `# 출력 형식` 섹션 |
+| 생산자 | `templates.ts`의 `format*Prompt` → `# 출력 형식` 섹션 |
 | 소비자 | `components/MarkdownRenderer.tsx:111` — `line.startsWith('### ')` |
 
 **절차:**
@@ -47,7 +47,36 @@ description: "BizFlow Coach의 신규·수정된 코치 모듈을 경계면 교�
 **판정:**
 - `### ` 헤딩 없음 → **실패**. 결과가 통짜 텍스트로 렌더된다
 - 하위 제목이 `### ` → **실패**. 아코디언이 과분할된다
-- `### ### ` 이중 표기 → **미검증**. `substring(4)` 이후 제목에 `###`가 남지만, Gemini가 이 표기를 어떻게 정규화하는지는 실제 응답을 봐야 안다. 기존 코치 전체가 이 표기를 쓰므로 신규 코치만 문제 삼지 말고 리더에게 "전체 확인 필요" 항목으로 보고한다
+- `### ### ` 이중 표기 → **미검증**. `substring(4)` 이후 제목에 `###`가 남지만, 모델이 이 표기를 어떻게 정규화하는지는 실제 응답을 봐야 안다. 기존 코치 전체가 이 표기를 쓰므로 신규 코치만 문제 삼지 말고 리더에게 "전체 확인 필요" 항목으로 보고한다
+
+---
+
+## 경계면 0 — action 문자열 3중 일치 (신규·최우선)
+
+프롬프트가 서버로 옮겨지면서 코치 하나가 **세 파일에 같은 문자열**로 등록된다. 하나라도 어긋나면 런타임 400이 난다.
+
+| | |
+|---|---|
+| 생산자 | `api/_lib/registry.ts`의 `actions` 키 |
+| 소비자 1 | `services/coachApi.ts`의 `callCoach<T>('...')` 첫 인자 |
+| 소비자 2 | `api/_prompts/templates.ts`의 `format*Prompt` export 여부 |
+
+**절차:** 번들된 스크립트를 실행한다. 프로젝트 루트에서:
+
+```bash
+node .claude/skills/coach-qa-checklist/scripts/check-actions.mjs
+```
+
+종료 코드 0이면 일치, 1이면 불일치 목록을 출력한다.
+
+**직접 grep하지 말 것.** `registry.ts`에는 JSON 스키마 객체가 섞여 있어 단순 `^  key:` 패턴이 `properties`·`required`·`type`까지 잡아내고, `coachApi.ts`의 제네릭은 여러 줄에 걸쳐 `callCoach<[^>]*>` 패턴을 빠져나간다. 스크립트는 이 두 함정을 모두 피한다.
+
+action은 문자열 비교라 **컴파일러가 절대 불일치를 잡지 못한다.**
+
+**증상 대조:**
+- registry에만 있고 coachApi에 없음 → UI가 호출할 함수가 없음
+- coachApi에만 있고 registry에 없음 → 400 `알 수 없는 action입니다`
+- `format*Prompt`에 `export` 누락 → registry에서 타입 에러 (이건 컴파일러가 잡아준다)
 
 ---
 
@@ -55,12 +84,12 @@ description: "BizFlow Coach의 신규·수정된 코치 모듈을 경계면 교�
 
 | | |
 |---|---|
-| 생산자 | `geminiService.ts`의 `export const get*` 파라미터 목록 |
+| 생산자 | `templates.ts`의 `export const get*` 파라미터 목록 |
 | 소비자 | `App.tsx`의 `handleAnalyze*` 또는 `action` 내부 호출부 |
 
 **절차:**
 ```bash
-grep -n "export const get{Name}" -A 6 services/geminiService.ts
+grep -n "export const get{Name}" -A 6 api/_prompts/templates.ts
 grep -n "await get{Name}(" App.tsx
 ```
 1. 파라미터의 **개수·순서·타입**을 하나씩 대조한다
@@ -95,13 +124,13 @@ grep -n "await get{Name}(" App.tsx
 | 위치 | 파일 | 어긋나면 |
 |---|---|---|
 | Specialist 객체 `name` | `App.tsx` specialists 배열 | (기준값) |
-| `collaborationBlock` 로스터 | `geminiService.ts:27` | 다른 코치가 이 코치를 추천하지 못함 |
-| dispatch switch case | `App.tsx:335` (아키타입 B만) | 채팅이 default 문구만 반복 |
-| 프롬프트 `# 역할` | `geminiService.ts` `format*Prompt` | 답변 속 이름과 카드 이름이 달라 신뢰 붕괴 |
+| `collaborationBlock` 로스터 | `templates.ts:23` | 다른 코치가 이 코치를 추천하지 못함 |
+| dispatch switch case | `App.tsx:353` (아키타입 B만) | 채팅이 default 문구만 반복 |
+| 프롬프트 `# 역할` | `templates.ts` `format*Prompt` | 답변 속 이름과 카드 이름이 달라 신뢰 붕괴 |
 
 **절차:**
 ```bash
-grep -n "{코치 이름}" App.tsx services/geminiService.ts
+grep -n "{코치 이름}" App.tsx api/_prompts/templates.ts
 ```
 글자 하나까지 일치하는지 본다. 공백, 슬래시(`계약/노무 코치 솔로몬`), 괄호(`우리 가게 성장 파트너 (HR)`)까지 포함한다.
 
@@ -117,8 +146,8 @@ stage 문자열이 **최대 4곳**에 등장한다.
 |---|---|---|
 | `AppStage` 유니온 타입 | App.tsx:63 | TypeScript 에러 (유일하게 컴파일러가 잡아줌) |
 | `action`의 `setStage()` | specialists 배열 | 존재하지 않는 화면으로 이동 |
-| `renderContent()` case | App.tsx:900~ | **흰 화면 또는 default(프로필 설정)로 튐** |
-| 채팅 greeting useEffect | App.tsx:95 (아키타입 B만) | 인사말 없이 빈 채팅창 |
+| `renderContent()` case | App.tsx:882~ | **흰 화면 또는 default(프로필 설정)로 튐** |
+| 채팅 greeting useEffect | App.tsx:96 (아키타입 B만) | 인사말 없이 빈 채팅창 |
 
 **절차:**
 ```bash

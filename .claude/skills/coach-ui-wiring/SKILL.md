@@ -7,7 +7,7 @@ description: "BizFlow Coach의 신규 코치를 App.tsx에 배선하는 절차. 
 
 신규 코치를 [App.tsx](../../../App.tsx)에 연결하는 절차.
 
-App.tsx는 1,029줄 단일 컴포넌트이고 코치 하나가 **최대 7곳**에 흩어져 배선된다. 이 프로젝트에서 가장 흔한 결함은 코드가 틀린 게 아니라 **지점 하나를 빠뜨리는 것**이다. 타입 체크도 빌드도 통과하는데 런타임에 코치가 죽는다.
+App.tsx는 1,047줄 단일 컴포넌트이고 코치 하나가 **최대 7곳**에 흩어져 배선된다. 이 프로젝트에서 가장 흔한 결함은 코드가 틀린 게 아니라 **지점 하나를 빠뜨리는 것**이다. 타입 체크도 빌드도 통과하는데 런타임에 코치가 죽는다.
 
 
 > **하위 스킬 안내:** 이 스킬은 `bizflow-coach-builder` 오케스트레이터가 담당 에이전트를 통해 호출하는 하위 스킬이다. 사용자가 코치 추가·수정을 요청했는데 오케스트레이터가 아직 실행되지 않았다면, 이 스킬을 단독으로 쓰지 말고 `bizflow-coach-builder`를 먼저 호출하라. 단독 실행하면 다른 경계면이 어긋난 채로 끝난다.
@@ -17,12 +17,12 @@ App.tsx는 1,029줄 단일 컴포넌트이고 코치 하나가 **최대 7곳**�
 | # | 지점 | 위치 | A | B | C | D |
 |---|---|---|---|---|---|---|
 | 1 | `AppStage` 유니온 타입 | App.tsx:63 | ✅ | ✅ | — | ✅ |
-| 2 | `specialists` 배열 | App.tsx:368~ | ✅ | ✅ | ✅ | ✅ |
-| 3 | 분석 핸들러 `handleAnalyze*` | App.tsx:699~ | ✅ | — | 인라인 | — |
-| 4 | `renderContent()` switch case | App.tsx:900~ | ✅ | ✅ | — | ✅ |
+| 2 | `specialists` 배열 | App.tsx:386~ | ✅ | ✅ | ✅ | ✅ |
+| 3 | 분석 핸들러 `handleAnalyze*` | App.tsx:717~ | ✅ | — | 인라인 | — |
+| 4 | `renderContent()` switch case | App.tsx:882~ | ✅ | ✅ | — | ✅ |
 | 5 | import — 서비스 함수 | App.tsx:9~38 | ✅ | ✅ | ✅ | — |
 | 6 | import — 컴포넌트 + 아이콘 | App.tsx:39~59 | ✅ | 아이콘만 | 아이콘만 | ✅ |
-| 7 | 채팅 useEffect + dispatch switch | App.tsx:95, 335 | — | ✅ | — | — |
+| 7 | 채팅 useEffect + dispatch switch | App.tsx:96, 335 | — | ✅ | — | — |
 
 **아키타입 C는 stage를 추가하지 않는다.** `action`이 인라인에서 분석을 실행하고 `setStage('analysis')`로 공용 결과 화면에 간다.
 
@@ -41,6 +41,8 @@ App.tsx는 1,029줄 단일 컴포넌트이고 코치 하나가 **최대 7곳**�
 `_workspace/02_prompt_contract.md`에서 `get*` 함수의 정확한 파라미터를 읽는다. 아직 없으면 `coach-prompt-engineer`에게 SendMessage로 요청한다.
 
 **시그니처를 추측해서 쓰지 않는다.** 인자 순서가 틀려도 둘 다 `string`이면 컴파일은 통과하고 런타임에 엉뚱한 값이 프롬프트에 들어간다.
+
+> **import 경로 주의:** 서비스 함수는 이제 `services/coachApi.ts`에서 온다 (`services/geminiService.ts`는 없다). AI 호출은 전부 `/api/coach` 서버리스 함수를 거치므로, 컴포넌트가 OpenAI SDK를 직접 import하는 일은 절대 없어야 한다 — 그러면 키가 브라우저 번들로 새어 나간다.
 
 ### 3. 배선 지점 순서대로 처리
 
@@ -69,7 +71,6 @@ interface Props {
 
 이 4개를 지킨다. 새 props를 발명하면 App.tsx의 render case가 기존 패턴에서 벗어난다.
 
-**0바이트 파일을 복제 원본으로 쓰지 않는다.** `WorkflowStepInput.tsx`, `StepIndicator.tsx`, `FactoryProfileInput.tsx`는 내용이 비어 있고 어디서도 import되지 않는 죽은 파일이다.
 
 ### 5. 폼 필드명을 프롬프트와 맞춘다
 
@@ -106,4 +107,3 @@ grep -n "{stage-value}\|{ServiceFn}\|{코치 이름}" App.tsx
 | 서비스 시그니처 추측 | 컴파일 통과 + 런타임에 엉뚱한 값 전달 |
 | `any`로 타입 에러 우회 | 지금 조용하고 나중에 터진다. 절대 하지 않는다 |
 | 폼 필드명 ≠ 프롬프트 변수명 | 프롬프트에 `undefined` 삽입, 답변 품질 붕괴 |
-| 0바이트 파일 복제 | 빈 컴포넌트 |

@@ -10,7 +10,18 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-*.local
+
+# 환경변수 — OPENAI_API_KEY가 들어가므로 절대 커밋하지 않는다.
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# 하네스 중간 산출물
+_workspace/
+_workspace_*/
 
 # Editor directories and files
 .vscode/*

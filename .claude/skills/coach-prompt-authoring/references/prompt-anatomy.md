@@ -71,11 +71,11 @@ Gemini에게 인격을 부여하는 부분. **2인칭 "당신은"으로 시작**
 **규칙:**
 - `---`로 위아래를 감싸 프롬프트의 다른 부분과 시각적으로 격리한다
 - `<숫자. 소주제>` 태그로 구획한다
-- **표를 적극적으로 쓴다.** MarkdownRenderer가 표를 실제 `<table>`로 렌더하므로 Gemini가 표 형식을 따라 출력하면 사장님 화면에도 표로 나온다
+- **표를 적극적으로 쓴다.** MarkdownRenderer가 표를 실제 `<table>`로 렌더하므로 모델이 표 형식을 따라 출력하면 사장님 화면에도 표로 나온다
 - 수치를 넣는다. "효과적이다"가 아니라 "방문율 10~20% 상승"
 - 비용을 명시한다. 소상공인에게 비용 없는 제안은 제안이 아니다
 
-**분량:** 기존 코치들은 30~150줄. 짧으면 일반론이 나오고, 300줄을 넘으면 Gemini가 앞부분에 편중된 답을 낸다.
+**분량:** 기존 코치들은 30~150줄. 짧으면 일반론이 나오고, 300줄을 넘으면 모델이 앞부분에 편중된 답을 낸다.
 
 **출처 없는 수치를 지어내지 않는다.** 확실한 것만 쓰고, 부족하면 리더에게 리서치를 요청한다.
 
@@ -124,7 +124,7 @@ MarkdownRenderer 아코디언을 만드는 부분. **`### ` 헤딩 계약**이 �
 **규칙:**
 - 최상위 섹션은 `### ` (샵 3개 + 공백). 이게 아코디언 제목이 된다
 - 하위 제목은 `####` 또는 `**굵게**`. 본문에 남는다
-- 각 섹션 아래에 **괄호로 지시문**을 쓴다. Gemini는 이 괄호를 출력하지 않고 지시로 해석한다
+- 각 섹션 아래에 **괄호로 지시문**을 쓴다. 모델은 이 괄호를 출력하지 않고 지시로 해석한다
 - 섹션 제목은 사장님이 읽고 행동할 수 있는 단위로 구체적으로 쓴다. "분석 결과"(❌) vs "당장 시작할 수 있는 저비용 액션 플랜 (초기 1개월)"(⭕)
 - 섹션 3~5개
 
@@ -132,10 +132,10 @@ MarkdownRenderer 아코디언을 만드는 부분. **`### ` 헤딩 계약**이 �
 
 ## 전체 예시
 
-`formatLocalMarketingPrompt`(geminiService.ts에서 `grep -n "formatLocalMarketingPrompt"`)가 5부 구조를 가장 충실히 따르는 참조 구현이다. 신규 프롬프트를 쓸 때 이 함수를 열어놓고 작업한다.
+`formatLocalMarketingPrompt`(templates.ts에서 `grep -n "formatLocalMarketingPrompt"`)가 5부 구조를 가장 충실히 따르는 참조 구현이다. 신규 프롬프트를 쓸 때 이 함수를 열어놓고 작업한다.
 
 다른 참조:
 - 지식 베이스가 표 중심인 예: `formatLocalMarketingPrompt`
-- JSON 응답 + responseSchema 예: `routeAndDelegate` (geminiService.ts:1872)
+- JSON 응답 + responseSchema 예: `routeAndDelegate` (templates.ts:1872)
 - 대화 이력을 받는 채팅형 예: `getCSCoaching` → `formatCSCoachPrompt`
-- collaborationBlock을 하위 헤딩으로 낮추는 예: geminiService.ts:1005
+- collaborationBlock을 하위 헤딩으로 낮추는 예: templates.ts:1005

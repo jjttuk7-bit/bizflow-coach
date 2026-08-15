@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db, logout, handleFirestoreError, OperationType } from './firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import type { User } from '@supabase/supabase-js';
+import { supabase, logout } from './lib/supabase';
+import { loadProfile, saveProfile } from './services/db';
 import BusinessProfileSetup from './components/BusinessProfileSetup';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
@@ -37,7 +37,7 @@ import {
   getChefMasterCoaching,
   getBeverageMasterCoaching,
   getLocalMarketingAnalysis,
-} from './services/geminiService';
+} from './services/coachApi';
 import { SpinnerIcon, SparklesIcon, ArchiveBoxIcon, ChartBarIcon, LightBulbIcon, PencilIcon, ChatBubbleLeftRightIcon, ScaleIcon, CalculatorIcon, UserGroupIcon, MapPinIcon, VideoCameraIcon, TagIcon, FingerPrintIcon, ClipboardListIcon, CubeTransparentIcon, UsersIcon, BuildingStorefrontIcon, AcademicCapIcon, ShieldCheckIcon, BeakerIcon } from './components/icons';
 import { INITIAL_BUSINESS_DATA, INITIAL_BAKERY_DESCRIPTION } from './constants';
 import SpecialistGreeting from './components/SpecialistGreeting';
@@ -75,7 +75,8 @@ const INITIAL_COACH_SPECIALIST: Specialist = {
 
 
 function App() {
-  const [user, loadingAuth] = useAuthState(auth);
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const [stage, setStage] = useState<AppStage>('landing');
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
   const [businessData, setBusinessData] = useState<BusinessData>(INITIAL_BUSINESS_DATA);
@@ -97,51 +98,67 @@ function App() {
     }
   }, [stage, selectedSpecialist]);
 
-  // Load user data from Firestore
+  // Supabase 인증 상태 구독. OAuth 리다이렉트 복귀 시에도 여기서 세션을 잡는다.
   useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setLoadingAuth(false);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoadingAuth(false);
+    });
+
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  // 로그인한 사용자의 저장된 프로필을 불러온다.
+  useEffect(() => {
+    if (loadingAuth) return;
+
+    if (!user) {
+      setStage('landing');
+      return;
+    }
+
+    let cancelled = false;
+
     const loadUserData = async () => {
-      if (user) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            if (data.businessProfile) {
-              setBusinessProfile(data.businessProfile);
-              setFullDescription(data.fullDescription || INITIAL_BAKERY_DESCRIPTION);
-              
-              // Recalculate metrics if data exists
-              const parsedData = await parseBusinessData(data.fullDescription || INITIAL_BAKERY_DESCRIPTION);
-              setBusinessData(parsedData);
-              const metrics = await getDashboardMetrics(data.businessProfile, parsedData);
-              setDashboardMetrics(metrics);
-              
-              setStage('dashboard');
-            } else {
-              setStage('profile-setup');
-            }
-          } else {
-            // New user
-            await setDoc(doc(db, 'users', user.uid), {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp()
-            });
-            setStage('profile-setup');
-          }
-        } catch (e) {
-          handleFirestoreError(e, OperationType.GET, `users/${user.uid}`);
+      try {
+        const stored = await loadProfile(user.id);
+
+        if (cancelled) return;
+
+        if (!stored?.businessProfile) {
+          setStage('profile-setup');
+          return;
         }
-      } else {
-        setStage('landing');
+
+        const description = stored.fullDescription || INITIAL_BAKERY_DESCRIPTION;
+        setBusinessProfile(stored.businessProfile);
+        setFullDescription(description);
+
+        // 저장된 설명으로 상세 데이터와 대시보드 지표를 다시 계산한다.
+        const parsedData = await parseBusinessData(description);
+        if (cancelled) return;
+        setBusinessData(parsedData);
+
+        const metrics = await getDashboardMetrics(stored.businessProfile, parsedData);
+        if (cancelled) return;
+        setDashboardMetrics(metrics);
+
+        setStage('dashboard');
+      } catch (e) {
+        if (cancelled) return;
+        console.error('[loadUserData]', e);
+        setError(e instanceof Error ? e.message : '데이터를 불러오지 못했습니다.');
+        setStage('profile-setup');
       }
     };
 
-    if (!loadingAuth) {
-      loadUserData();
-    }
+    loadUserData();
+    return () => { cancelled = true; };
   }, [user, loadingAuth]);
 
   const handleProfileSave = async (description: string) => {
@@ -169,15 +186,16 @@ function App() {
         setAnalysisResult(result);
         setConversation([{ author: INITIAL_COACH_SPECIALIST, text: result }]);
 
-        // Save to Firestore
+        // Supabase에 저장. 저장 실패가 분석 결과 표시를 막지 않도록 분리해서 처리한다.
         if (user) {
-          await setDoc(doc(db, 'users', user.uid), {
-            businessProfile: profile,
-            fullDescription: description,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
+          try {
+            await saveProfile(user.id, user.email ?? null, profile, description);
+          } catch (saveErr) {
+            console.error('[handleProfileSave]', saveErr);
+            setError('분석은 완료했지만 프로필 저장에 실패했습니다. 다시 저장해주세요.');
+          }
         }
-        
+
     } catch (e) {
         setError(e instanceof Error ? e.message : 'An unknown error occurred.');
         setStage('profile-setup');

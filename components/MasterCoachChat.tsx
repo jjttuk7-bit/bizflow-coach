@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Specialist, BusinessProfile, BusinessData } from '../types';
-import { getMasterCoachAnswer } from '../services/geminiService';
+import { getMasterCoachAnswer } from '../services/coachApi';
 import { ArrowLeftIcon, PaperAirplaneIcon, SpinnerIcon } from './icons';
 import MarkdownRenderer from './MarkdownRenderer';
 

@@ -1,32 +1,42 @@
 ---
 name: coach-prompt-authoring
-description: "BizFlow Coach의 Gemini 프롬프트를 services/geminiService.ts에 작성·수정하는 절차. format*Prompt 템플릿의 5부 구조, MarkdownRenderer 아코디언을 만드는 '### ' 헤딩 계약, 지식 베이스 작성법, callGemini vs callGeminiForJson 선택과 responseSchema, collaborationBlock 로스터 갱신을 다룬다. 코치 프롬프트를 새로 쓰거나, AI 답변이 '너무 피상적'·'일반론만 나온다'·'형식이 이상하다'는 피드백으로 프롬프트를 개선할 때 반드시 사용할 것. geminiService.ts를 편집하는 모든 작업에서 발동한다."
+description: "BizFlow Coach의 OpenAI 프롬프트를 api/_prompts/templates.ts에 작성·수정하고 api/_lib/registry.ts에 action으로 등록하는 절차. format*Prompt 템플릿의 5부 구조, MarkdownRenderer 아코디언을 만드는 '### ' 헤딩 계약, 지식 베이스 작성법, callText vs callJson 선택과 JSON Schema, collaborationBlock 로스터 갱신을 다룬다. 코치 프롬프트를 새로 쓰거나, AI 답변이 '너무 피상적'·'일반론만 나온다'·'형식이 이상하다'는 피드백으로 프롬프트를 개선할 때 반드시 사용할 것. templates.ts나 registry.ts를 편집하는 모든 작업에서 발동한다."
 ---
 
 # 코치 프롬프트 작성
 
-[services/geminiService.ts](../../../services/geminiService.ts)에 신규 코치의 프롬프트와 서비스 함수를 추가하거나, 기존 프롬프트를 개선하는 절차.
+[api/_prompts/templates.ts](../../../api/_prompts/templates.ts)에 신규 코치의 프롬프트와 서비스 함수를 추가하거나, 기존 프롬프트를 개선하는 절차.
 
-이 파일은 1,935줄이고 그중 약 1,600줄이 프롬프트다. **프롬프트가 곧 제품**이다. 코치의 품질은 지식 베이스의 밀도와 출력 형식 설계에서 나온다.
+이 파일은 1,563줄 전부가 프롬프트다. **프롬프트가 곧 제품**이다. 코치의 품질은 지식 베이스의 밀도와 출력 형식 설계에서 나온다.
 
 
 > **하위 스킬 안내:** 이 스킬은 `bizflow-coach-builder` 오케스트레이터가 담당 에이전트를 통해 호출하는 하위 스킬이다. 사용자가 코치 추가·수정을 요청했는데 오케스트레이터가 아직 실행되지 않았다면, 이 스킬을 단독으로 쓰지 말고 `bizflow-coach-builder`를 먼저 호출하라. 단독 실행하면 다른 경계면이 어긋난 채로 끝난다.
 
-## 파일 구조
+## 건드릴 파일 3개
+
+프롬프트는 **서버에만** 존재한다. OpenAI 키와 프롬프트 본문이 브라우저 번들에 들어가지 않도록 `/api` 뒤로 옮겼기 때문이다. 코치 하나를 추가하려면 세 파일을 모두 손봐야 한다.
+
+| # | 파일 | 할 일 | 빠뜨리면 |
+|---|---|---|---|
+| 1 | `api/_prompts/templates.ts` | `format{Name}Prompt()` 추가 + `collaborationBlock` 갱신 | 프롬프트 없음 |
+| 2 | `api/_lib/registry.ts` | `actions`에 action 등록 | **400 "알 수 없는 action"** — 등록되지 않은 action은 실행 자체가 차단된다 |
+| 3 | `services/coachApi.ts` | 같은 이름의 클라이언트 래퍼 export | UI가 호출할 함수가 없음 |
+
+`templates.ts` 내부 구조:
 
 | 영역 | 라인 | 내용 |
 |---|---|---|
-| 헤더 | 1~25 | import, `ai` 인스턴스, `formatConversationHistory` |
-| `collaborationBlock` | 27~50 | **모든 코치가 공유하는 협업 대상 로스터** |
-| 프롬프트 템플릿 | 51~1598 | `format*Prompt()` 함수들 |
-| 호출 헬퍼 | 1599~1622 | `callGemini`, `callGeminiForJson` |
-| 서비스 함수 | 1624~1935 | `export const get*` |
+| import + `formatConversationHistory` | 1~21 | 서버 전용 타입은 `../_lib/types`에서 온다 |
+| `collaborationBlock` | 23~ | **모든 코치가 공유하는 협업 대상 로스터** |
+| 프롬프트 템플릿 | 이후 전부 | `export function format*Prompt()` |
 
-신규 코치는 **프롬프트 템플릿 영역 끝**과 **서비스 함수 영역 끝**에 각각 추가한다. 삽입 위치를 못 찾겠으면 `grep -n "formatLocalMarketingPrompt" services/geminiService.ts`로 인접 함수를 찾는다.
+신규 프롬프트는 파일 끝에 추가한다. 위치를 못 찾겠으면 `grep -n "formatLocalMarketingPrompt" api/_prompts/templates.ts`로 인접 함수를 찾는다.
+
+> `templates.ts`의 함수는 전부 `export`다. `registry.ts`가 `import * as P`로 가져다 쓰므로 `export`를 빠뜨리면 등록 단계에서 타입 에러가 난다.
 
 ## 1. 프롬프트 5부 구조
 
-모든 `format*Prompt` 함수는 이 구조를 따른다. 순서를 바꾸지 않는다 — Gemini가 역할을 먼저 읽어야 이후 지시를 그 인격으로 해석한다.
+모든 `format*Prompt` 함수는 이 구조를 따른다. 순서를 바꾸지 않는다 — 모델이 역할을 먼저 읽어야 이후 지시를 그 인격으로 해석한다.
 
 ````ts
 function format{Name}Prompt(profile: BusinessProfile, data: {...}): string {
@@ -92,11 +102,11 @@ if (line.startsWith('### ')) {
 
 > **기존 코드의 `### ###` 표기에 대하여**: 기존 프롬프트들은 `### ### '폴'의 맞춤 홍보 전략`처럼 `###`을 두 번 쓴다. `substring(4)` 이후 제목에 `###`가 남으므로 화면에 그대로 보일 수 있다. 신규 프롬프트는 **`### ` 한 번만** 쓰는 것을 권장하되, 실제 Gemini 출력을 확인하기 전까지는 어느 쪽도 확정하지 말고 QA에 "실행 확인 필요"로 넘긴다. 정적 분석만으로는 모델이 이 표기를 어떻게 정규화하는지 알 수 없다.
 
-`collaborationBlock`은 자체적으로 `### ### 다음 스텝 추천`으로 시작하므로 별도 섹션이 된다. 이것을 본문에 넣고 싶으면 `getSalesAnalysis`가 하듯 `.replace()`로 `####`로 낮춘다 (geminiService.ts:1005).
+`collaborationBlock`은 자체적으로 `### ### 다음 스텝 추천`으로 시작하므로 별도 섹션이 된다. 이것을 본문에 넣고 싶으면 `getSalesAnalysis`가 하듯 `.replace()`로 `####`로 낮춘다 (templates.ts:1005).
 
 ## 3. 지식 베이스 작성
 
-**지식 베이스 없는 프롬프트를 만들지 않는다.** 이것이 이 앱의 코치와 범용 챗봇을 가르는 유일한 차이다. `# 역할`과 `# 출력 형식`만 있으면 Gemini는 검색하면 나오는 일반론을 뱉는다.
+**지식 베이스 없는 프롬프트를 만들지 않는다.** 이것이 이 앱의 코치와 범용 챗봇을 가르는 유일한 차이다. `# 역할`과 `# 출력 형식`만 있으면 모델은 검색하면 나오는 일반론을 뱉는다.
 
 | 좋은 지식 베이스 | 나쁜 지식 베이스 |
 |---|---|
@@ -108,44 +118,55 @@ if (line.startsWith('### ')) {
 
 **출처가 불분명한 수치를 지어내지 않는다.** 사장님이 이걸 보고 실제 사업 결정을 한다. 확실한 것만 쓰고, 부족하면 리더에게 리서치를 요청한다.
 
-## 4. 서비스 함수 작성
+## 4. action 등록 + 클라이언트 래퍼
 
-### 문자열 반환 (기본)
+프롬프트를 썼으면 **양쪽에 배선**한다. 하나라도 빠지면 코치가 호출되지 않는다.
 
-```ts
-export const get{Name} = async (profile: BusinessProfile, data: {...}): Promise<string> => {
-    const prompt = format{Name}Prompt(profile, data);
-    return callGemini(prompt);
-};
-```
+### 4-1. `api/_lib/registry.ts` — 서버 등록
 
-### JSON 반환 (구조화된 데이터가 필요할 때만)
+마크다운 답변(대부분의 경우):
 
 ```ts
-export const get{Name} = async (data: {...}): Promise<{Type}> => {
-    const prompt = format{Name}Prompt(data);
-    const config = {
-        responseMimeType: "application/json",
-        responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-                field: { type: Type.STRING, description: '...' },
-            },
-            required: ["field"],
-        },
-    };
-    const responseText = await callGeminiForJson(prompt, config);
-    return JSON.parse(responseText.trim());
-};
+get{Name}: (p: { profile: BusinessProfile; data: {...} }) =>
+  callText(P.format{Name}Prompt(p.profile, p.data)),
 ```
 
-**JSON은 코칭 답변에 쓰지 않는다.** 코칭 결과는 마크다운 문자열이어야 `MarkdownRenderer`가 아코디언·표로 렌더한다. JSON은 차트 데이터(`SalesAnalysisResult`), 파싱(`parseBusinessProfile`), 라우팅(`routeAndDelegate`)처럼 **코드가 소비하는 값**에만 쓴다.
+구조화된 값이 필요할 때만:
 
-`responseSchema`를 쓸 때는 반환 타입을 `types.ts`에 정의하고 `JSON.parse` 결과와 필드명이 정확히 일치하는지 확인한다. 제네릭 캐스팅은 컴파일러가 검증하지 못한다.
+```ts
+get{Name}: (p: {...}) =>
+  callJson(P.format{Name}Prompt(p.data), '{snake_case_이름}', {
+    type: 'object',
+    properties: { field: { type: 'string', description: '...' } },
+    required: ['field'],
+    additionalProperties: false,
+  }),
+```
+
+**Structured Outputs는 strict 모드로 동작한다.** 그래서 스키마에 두 가지 제약이 있다:
+- 모든 속성을 `required`에 넣어야 한다 — 선택 필드를 만들려면 `type: ['string', 'null']`로 nullable하게 선언한다
+- `additionalProperties: false`가 필수다
+
+전부 문자열 필드라면 `stringSchema(['a','b'])` 헬퍼로 줄일 수 있다.
+
+### 4-2. `services/coachApi.ts` — 클라이언트 래퍼
+
+```ts
+export const get{Name} = (profile: BusinessProfile, data: {...}) =>
+  callCoach<string>('get{Name}', { profile, data });
+```
+
+**action 문자열은 registry의 키와 글자 하나까지 같아야 한다.** 문자열 비교라서 컴파일러가 오타를 잡지 못하고, 런타임에 400 "알 수 없는 action"으로만 드러난다.
+
+`Specialist`나 `ConversationMessage`를 넘겨야 하면 `toInfo()` / `toWire()`로 변환한다. `Specialist`에는 React 컴포넌트(`Icon`)와 함수(`action`)가 들어 있어 그대로 `JSON.stringify`하면 서버에서 사라진다.
+
+### 4-3. JSON을 쓸 자리 판단
+
+**코칭 답변에는 JSON을 쓰지 않는다.** 코칭 결과는 마크다운 문자열이어야 `MarkdownRenderer`가 아코디언·표로 렌더한다. JSON은 파싱(`parseBusinessProfile`), 대시보드 지표(`getDashboardMetrics`), 라우팅(`routeAndDelegate`)처럼 **코드가 소비하는 값**에만 쓴다.
 
 ## 5. collaborationBlock 갱신 — 빠뜨리기 쉬움
 
-`collaborationBlock`(geminiService.ts:27)은 **19명의 코치 목록이 하드코딩된 문자열**이며 13개 프롬프트에 삽입된다. 다른 코치가 "다음 스텝"으로 누구를 추천할지 여기서 고른다.
+`collaborationBlock`(templates.ts:23)은 **19명의 코치 목록이 하드코딩된 문자열**이며 13개 프롬프트에 삽입된다. 다른 코치가 "다음 스텝"으로 누구를 추천할지 여기서 고른다.
 
 신규 코치를 추가하면 여기에 한 줄을 넣는다:
 
@@ -153,7 +174,7 @@ export const get{Name} = async (data: {...}): Promise<{Type}> => {
 - **{이름} ({역할}):** {한 줄 설명}
 ```
 
-**넣지 않으면**: 신규 코치는 어떤 코치로부터도 추천받지 못한다. 프롬프트에 "목록에 없는 이름은 절대로 생성하지 마세요"라고 명시되어 있어 Gemini가 의도적으로 배제한다. 기능은 정상인데 아무도 도달하지 못하는 코치가 된다.
+**넣지 않으면**: 신규 코치는 어떤 코치로부터도 추천받지 못한다. 프롬프트에 "목록에 없는 이름은 절대로 생성하지 마세요"라고 명시되어 있어 모델이 의도적으로 배제한다. 기능은 정상인데 아무도 도달하지 못하는 코치가 된다.
 
 ## 6. 아키타입 B(채팅형) 추가 규칙
 

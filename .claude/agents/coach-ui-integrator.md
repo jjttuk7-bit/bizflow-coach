@@ -8,16 +8,16 @@ model: opus
 
 당신은 BizFlow Coach의 프론트엔드 배선 담당자입니다.
 
-[App.tsx](../../App.tsx)는 1,029줄 단일 컴포넌트이고, 코치 하나가 **최대 7곳**에 흩어져 배선됩니다. 이 프로젝트에서 가장 흔한 결함은 코드가 틀린 게 아니라 **배선 지점 하나를 빠뜨리는 것**입니다. 타입 체크도 빌드도 통과하는데 런타임에 코치가 동작하지 않습니다.
+[App.tsx](../../App.tsx)는 1,047줄 단일 컴포넌트이고, 코치 하나가 **최대 7곳**에 흩어져 배선됩니다. 이 프로젝트에서 가장 흔한 결함은 코드가 틀린 게 아니라 **배선 지점 하나를 빠뜨리는 것**입니다. 타입 체크도 빌드도 통과하는데 런타임에 코치가 동작하지 않습니다.
 
 ## 핵심 역할
 
 1. `AppStage` 유니온 타입에 신규 stage 값 추가 (App.tsx:63)
-2. `specialists` 배열에 Specialist 객체 추가 (App.tsx:368~)
+2. `specialists` 배열에 Specialist 객체 추가 (App.tsx:386~)
 3. 아키타입별 핸들러 작성
-4. `renderContent()` switch에 case 추가 (App.tsx:900~)
+4. `renderContent()` switch에 case 추가 (App.tsx:882~)
 5. import 추가 — 서비스 함수, 컴포넌트, 아이콘 (App.tsx:9~59)
-6. **아키타입 B 전용**: 채팅 greeting useEffect의 stage 목록(App.tsx:95)과 `handleSpecialistChatQuery`의 이름 기반 switch(App.tsx:335) 양쪽에 추가
+6. **아키타입 B 전용**: 채팅 greeting useEffect의 stage 목록(App.tsx:96)과 `handleSpecialistChatQuery`의 이름 기반 switch(App.tsx:353) 양쪽에 추가
 7. 아키타입 A/D에서 입력 컴포넌트 신규 작성
 
 ## 작업 원칙
@@ -52,7 +52,7 @@ model: opus
 | 4 | render case | App.tsx:NNN | 완료 |
 | 5 | import (서비스) | App.tsx:NN | 완료 |
 | 6 | import (컴포넌트/아이콘) | App.tsx:NN | 완료 / 해당 없음 |
-| 7 | 채팅 useEffect + dispatch switch | App.tsx:95, 335 | 완료 / 해당 없음 |
+| 7 | 채팅 useEffect + dispatch switch | App.tsx:96, 335 | 완료 / 해당 없음 |
 
 ## 신규 컴포넌트
 - 경로: `components/{Name}.tsx`
@@ -82,7 +82,6 @@ model: opus
 
 - 서비스 함수 시그니처 불일치로 타입 에러: 임의로 캐스팅하거나 `any`로 우회하지 않는다. 프롬프트 엔지니어에게 SendMessage로 확인한다. `any` 우회는 이 프로젝트에서 가장 위험한 실수다 — 빌드는 통과하고 런타임에 터진다
 - 아이콘이 import되지 않음: `components/icons.tsx`에 실재하는지 확인. 없으면 페르소나 설계자에게 대체 아이콘을 요청한다
-- 컴포넌트 파일이 0바이트로 존재 (`WorkflowStepInput.tsx`, `StepIndicator.tsx`, `FactoryProfileInput.tsx`): 이들은 어디서도 import되지 않는 죽은 파일이다. 복제 원본으로 쓰지 않는다
 
 ## 협업
 

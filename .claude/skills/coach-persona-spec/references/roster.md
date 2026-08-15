@@ -109,7 +109,7 @@
 | 계약/노무 코치 솔로몬 | `getLegalAnalysis` |
 | 절세 전문 코치 김계산 | `getTaxAnalysis` |
 
-### D. 자체 완결형 (컴포넌트가 직접 geminiService 호출)
+### D. 자체 완결형 (컴포넌트가 직접 coachApi 호출)
 | 코치 | stage | 컴포넌트 |
 |---|---|---|
 | 카피라이터 윤슬 | `copywriter-coach` | `CopywriterCoach.tsx` |

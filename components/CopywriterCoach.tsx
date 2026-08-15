@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Specialist, BusinessProfile } from '../types';
-import { getCopywritingAssistance } from '../services/geminiService';
+import { getCopywritingAssistance } from '../services/coachApi';
 import { ArrowLeftIcon, PaperAirplaneIcon, PencilIcon, SparklesIcon, SpinnerIcon } from './icons';
 import MarkdownRenderer from './MarkdownRenderer';
 

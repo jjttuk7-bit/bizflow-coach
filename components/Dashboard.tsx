@@ -11,7 +11,8 @@ interface DashboardProps {
     onDirectChat: () => void;
 }
 
-const MetricCard: React.FC<{ title: string; value: string; Icon: React.FC<{ className?: string }> }> = ({ title, value, Icon }) => (
+// 지표는 대시보드 진입 후 비동기로 채워지므로 value는 로딩 중 undefined일 수 있다.
+const MetricCard: React.FC<{ title: string; value?: string; Icon: React.FC<{ className?: string }> }> = ({ title, value, Icon }) => (
     <div className="bg-white p-4 rounded-lg shadow-sm flex items-start space-x-4">
         <div className="bg-indigo-100 p-3 rounded-full">
             <Icon className="w-6 h-6 text-indigo-600" />

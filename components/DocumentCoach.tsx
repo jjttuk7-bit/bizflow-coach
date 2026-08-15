@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Specialist } from '../types';
-import { getDocumentDraft } from '../services/geminiService';
+import { getDocumentDraft } from '../services/coachApi';
 import { ArrowLeftIcon, SpinnerIcon, SparklesIcon, ArrowPathIcon } from './icons';
 
 interface DocumentCoachProps {

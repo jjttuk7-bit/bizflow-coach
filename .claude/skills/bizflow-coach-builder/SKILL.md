@@ -1,6 +1,6 @@
 ---
 name: bizflow-coach-builder
-description: "BizFlow Coach에 AI 전문가 코치 모듈을 end-to-end로 추가·수정하는 오케스트레이터. 페르소나 설계 → Gemini 프롬프트 작성 → App.tsx 배선 → 통합 정합성 검증까지 4개 전문 에이전트를 조율한다. '코치 추가해줘', '전문가 만들어줘', '{분야} 코치가 필요해', 'specialist 추가' 요청 시 반드시 사용할 것. 후속 작업에도 반드시 사용: 코치 다시 만들어줘, 재실행, 프롬프트만 다시, UI만 수정, 업데이트, 보완, 개선, 이전 결과 기반으로 수정, '그 코치 답변이 별로야', '코치가 동작 안 해', '추천에 안 뜬다', '채팅이 무응답이야'. 단순히 코치 목록을 묻는 질문에는 사용하지 않는다."
+description: "BizFlow Coach에 AI 전문가 코치 모듈을 end-to-end로 추가·수정하는 오케스트레이터. 페르소나 설계 → OpenAI 프롬프트 작성 → App.tsx 배선 → 통합 정합성 검증까지 4개 전문 에이전트를 조율한다. '코치 추가해줘', '전문가 만들어줘', '{분야} 코치가 필요해', 'specialist 추가' 요청 시 반드시 사용할 것. 후속 작업에도 반드시 사용: 코치 다시 만들어줘, 재실행, 프롬프트만 다시, UI만 수정, 업데이트, 보완, 개선, 이전 결과 기반으로 수정, '그 코치 답변이 별로야', '코치가 동작 안 해', '추천에 안 뜬다', '채팅이 무응답이야'. 단순히 코치 목록을 묻는 질문에는 사용하지 않는다."
 ---
 
 # BizFlow Coach Builder — 코치 모듈 오케스트레이터
@@ -26,7 +26,7 @@ BizFlow Coach에 AI 전문가를 추가하거나 기존 코치를 개선하는 �
 | 에이전트 | subagent_type | 스킬 | 산출물 |
 |---|---|---|---|
 | persona | `coach-persona-designer` | `coach-persona-spec` | `_workspace/01_persona_spec.md` |
-| prompt | `coach-prompt-engineer` | `coach-prompt-authoring` | `_workspace/02_prompt_contract.md` + `geminiService.ts` |
+| prompt | `coach-prompt-engineer` | `coach-prompt-authoring` | `_workspace/02_prompt_contract.md` + `templates.ts` |
 | ui | `coach-ui-integrator` | `coach-ui-wiring` | `_workspace/03_wiring_report.md` + `App.tsx`, `components/` |
 | qa | `coach-integration-qa` | `coach-qa-checklist` | `_workspace/04_qa_report.md` |
 
@@ -157,7 +157,7 @@ Agent(name: "qa", subagent_type: "coach-integration-qa",
 5. 사용자에게 보고:
    - 추가된 코치와 아키타입
    - 변경된 파일 목록
-   - **QA 판정과 미검증 항목** — 특히 "실제 Gemini 응답 확인 필요" 항목을 반드시 전달한다
+   - **QA 판정과 미검증 항목** — 특히 "실제 모델 응답 확인 필요" 항목을 반드시 전달한다
    - 확인 방법: `npm run dev` 실행 → 대시보드에서 코치 카드 클릭
 
 ---
@@ -174,7 +174,7 @@ Agent(name: "qa", subagent_type: "coach-integration-qa",
         [prompt]  ←─리더 중계─→  [ui]
              ↓                    ↓
     02_prompt_contract.md  03_wiring_report.md
-    geminiService.ts        App.tsx, components/
+    templates.ts        App.tsx, components/
                 ↘          ↙
                    [qa] (점진적)
                       ↓
