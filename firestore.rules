@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches Auth UID)
+    // Fields:
+    //   - uid: string (required) - Firebase Auth UID
+    //   - displayName: string (optional) - User's display name
+    //   - email: string (required, format: email) - User's email
+    //   - photoURL: string (optional) - User's photo URL
+    //   - businessProfile: map (optional) - User's business profile
+    //   - fullDescription: string (optional) - Full business description
+    //   - createdAt: timestamp (required) - Creation time
+    //   - updatedAt: timestamp (required) - Last update time
+    //
+    // Collection: users/{userId}/conversations
+    // Document ID: {conversationId}
+    // Fields:
+    //   - userId: string (required) - Reference to parent user
+    //   - messages: list (required) - Array of message objects
+    //   - updatedAt: timestamp (required) - Last update time
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             data.uid is string &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidConversation(data) {
+      return data.keys().hasAll(['userId', 'messages', 'updatedAt']) &&
+             data.userId == request.auth.uid &&
+             data.messages is list &&
+             data.updatedAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      
+      match /conversations/{conversationId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidConversation(request.resource.data);
+        allow update: if isOwner(userId) && isValidConversation(request.resource.data);
+      }
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user basic information and their business profile.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "email": { "type": "string", "format": "email", "description": "User's email" },
+        "photoURL": { "type": "string", "description": "User's photo URL" },
+        "businessProfile": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "industry": { "type": "string" },
+            "product": { "type": "string" },
+            "employees": { "type": "string" }
+          }
+        },
+        "fullDescription": { "type": "string", "description": "The full business description provided by the user" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "Stores chat history for a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "author": { "type": "string" },
+              "text": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile and business settings."
+    },
+    "/users/{userId}/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Chat history for specific coaching sessions."
+    }
+  }
+}
