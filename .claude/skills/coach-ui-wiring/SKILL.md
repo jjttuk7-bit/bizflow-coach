@@ -20,9 +20,9 @@ App.tsx는 1,047줄 단일 컴포넌트이고 코치 하나가 **최대 7곳**�
 | 2 | `specialists` 배열 | App.tsx:386~ | ✅ | ✅ | ✅ | ✅ |
 | 3 | 분석 핸들러 `handleAnalyze*` | App.tsx:717~ | ✅ | — | 인라인 | — |
 | 4 | `renderContent()` switch case | App.tsx:882~ | ✅ | ✅ | — | ✅ |
-| 5 | import — 서비스 함수 | App.tsx:9~38 | ✅ | ✅ | ✅ | — |
-| 6 | import — 컴포넌트 + 아이콘 | App.tsx:39~59 | ✅ | 아이콘만 | 아이콘만 | ✅ |
-| 7 | 채팅 useEffect + dispatch switch | App.tsx:96, 335 | — | ✅ | — | — |
+| 5 | import — 서비스 함수(`coachApi`) + 아이콘 | App.tsx:9~40 | ✅ | ✅ | ✅ | — |
+| 6 | 컴포넌트 **`React.lazy` 선언** | App.tsx:48~67 | ✅ | — | — | ✅ |
+| 7 | 채팅 useEffect + dispatch switch | App.tsx:96, 353 | — | ✅ | — | — |
 
 **아키타입 C는 stage를 추가하지 않는다.** `action`이 인라인에서 분석을 실행하고 `setStage('analysis')`로 공용 결과 화면에 간다.
 
@@ -74,7 +74,7 @@ interface Props {
 
 ### 5. 폼 필드명을 프롬프트와 맞춘다
 
-컴포넌트의 state 필드명이 프롬프트의 `${data.x}` 바인딩과 **정확히** 일치해야 한다. 어긋나면 프롬프트에 `undefined` 문자열이 들어가고 Gemini는 그걸 정보로 취급한다.
+컴포넌트의 state 필드명이 프롬프트의 `${data.x}` 바인딩과 **정확히** 일치해야 한다. 어긋나면 프롬프트에 `undefined` 문자열이 들어가고 모델은 그걸 정보로 취급한다.
 
 필드 구성이 확정되면 `coach-prompt-engineer`에게 SendMessage로 알린다.
 
@@ -90,7 +90,8 @@ grep -n "{stage-value}\|{ServiceFn}\|{코치 이름}" App.tsx
 
 ## 스타일 규약
 
-- **Tailwind만 사용.** 이 프로젝트는 CSS 파일이 없다. `index.html`의 CDN Tailwind로 동작한다
+- **Tailwind만 사용.** Tailwind v4가 빌드에 포함되어 있고(`@tailwindcss/vite`), 전역 CSS는 `index.css` 하나뿐이다. 컴포넌트별 CSS 파일을 만들지 않는다
+- **클래스명을 문자열 조합으로 만들지 않는다.** Tailwind 스캐너는 소스에서 완전한 문자열만 찾아낸다. `` `border-${color}-500` ``처럼 조합하면 그 클래스는 생성되지 않아 색이 통째로 사라진다. `specialist.classes`가 완성된 문자열을 담고 있는 이유다
 - 버튼·입력창·로딩 스피너는 복제 원본의 클래스를 그대로 쓴다. 새 스타일을 발명하면 앱의 시각적 일관성이 깨진다
 - 코치별 색상은 `specialist.classes`에서 꺼내 쓴다. 하드코딩하지 않는다
 - 로딩 중에는 `SpinnerIcon`에 `animate-spin`을 적용한다

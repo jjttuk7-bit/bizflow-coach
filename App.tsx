@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase, logout } from './lib/supabase';
 import { loadProfile, saveProfile } from './services/db';
-import BusinessProfileSetup from './components/BusinessProfileSetup';
 import LandingPage from './components/LandingPage';
 import LoginPage from './components/LoginPage';
 import { BusinessProfile, BusinessData, Specialist, DashboardMetrics, ConversationMessage, ChartData } from './types';
@@ -40,25 +39,32 @@ import {
 } from './services/coachApi';
 import { SpinnerIcon, SparklesIcon, ArchiveBoxIcon, ChartBarIcon, LightBulbIcon, PencilIcon, ChatBubbleLeftRightIcon, ScaleIcon, CalculatorIcon, UserGroupIcon, MapPinIcon, VideoCameraIcon, TagIcon, FingerPrintIcon, ClipboardListIcon, CubeTransparentIcon, UsersIcon, BuildingStorefrontIcon, AcademicCapIcon, ShieldCheckIcon, BeakerIcon } from './components/icons';
 import { INITIAL_BUSINESS_DATA, INITIAL_BAKERY_DESCRIPTION } from './constants';
-import SpecialistGreeting from './components/SpecialistGreeting';
-import AnalysisResult from './components/AnalysisResult';
-import InventoryInput from './components/InventoryInput';
-import DirectChat from './components/DirectChat';
-import Dashboard from './components/Dashboard';
-import CompetitionStrategyInput from './components/CompetitionStrategyInput';
-import ShortsScriptInput from './components/ShortsScriptInput';
-import PricingStrategyInput from './components/PricingStrategyInput';
-import CopywriterCoach from './components/CopywriterCoach';
-import BrandCoreCoach from './components/BrandCoreCoach';
-import DocumentCoach from './components/DocumentCoach';
-import SalesAnalysisInput from './components/SalesAnalysisInput';
-import MasterCoachChat from './components/MasterCoachChat';
-import StrategicPlanningCoach from './components/StrategicPlanningCoach';
-import CSCoachChat from './components/CSCoachChat';
-import ECommerceCoachInput from './components/ECommerceCoachInput';
-import SpaceDirectorInput from './components/SpaceDirectorInput';
-import StartupMentorCoach from './components/StartupMentorCoach';
-import LocalMarketingInput from './components/LocalMarketingInput';
+
+/**
+ * 로그인 전에는 랜딩/로그인 화면만 필요하므로 나머지는 지연 로딩한다.
+ * 특히 AnalysisResult는 SalesChart를 거쳐 chart.js를 끌고 오는데,
+ * 이걸 첫 화면 번들에 넣으면 아무것도 안 보고 나가는 방문자까지 비용을 치른다.
+ */
+const BusinessProfileSetup = React.lazy(() => import('./components/BusinessProfileSetup'));
+const SpecialistGreeting = React.lazy(() => import('./components/SpecialistGreeting'));
+const AnalysisResult = React.lazy(() => import('./components/AnalysisResult'));
+const InventoryInput = React.lazy(() => import('./components/InventoryInput'));
+const DirectChat = React.lazy(() => import('./components/DirectChat'));
+const Dashboard = React.lazy(() => import('./components/Dashboard'));
+const CompetitionStrategyInput = React.lazy(() => import('./components/CompetitionStrategyInput'));
+const ShortsScriptInput = React.lazy(() => import('./components/ShortsScriptInput'));
+const PricingStrategyInput = React.lazy(() => import('./components/PricingStrategyInput'));
+const CopywriterCoach = React.lazy(() => import('./components/CopywriterCoach'));
+const BrandCoreCoach = React.lazy(() => import('./components/BrandCoreCoach'));
+const DocumentCoach = React.lazy(() => import('./components/DocumentCoach'));
+const SalesAnalysisInput = React.lazy(() => import('./components/SalesAnalysisInput'));
+const MasterCoachChat = React.lazy(() => import('./components/MasterCoachChat'));
+const StrategicPlanningCoach = React.lazy(() => import('./components/StrategicPlanningCoach'));
+const CSCoachChat = React.lazy(() => import('./components/CSCoachChat'));
+const ECommerceCoachInput = React.lazy(() => import('./components/ECommerceCoachInput'));
+const SpaceDirectorInput = React.lazy(() => import('./components/SpaceDirectorInput'));
+const StartupMentorCoach = React.lazy(() => import('./components/StartupMentorCoach'));
+const LocalMarketingInput = React.lazy(() => import('./components/LocalMarketingInput'));
 
 type AppStage = 'landing' | 'login' | 'profile-setup' | 'dashboard' | 'greeting' | 'inventory-input' | 'competition-input' | 'shorts-script-input' | 'pricing-input' | 'copywriter-coach' | 'brand-core-coach' | 'document-coach' | 'analysis' | 'initial-analysis' | 'direct-chat' | 'sales-analysis-input' | 'master-coach-chat' | 'strategic-planning-coach' | 'cs-coach-chat' | 'ecommerce-coach-input' | 'space-director-input' | 'startup-mentor-coach' | 'hr-coach-chat' | 'chef-master-chat' | 'beverage-master-chat' | 'local-marketing-input';
 
@@ -1040,7 +1046,16 @@ function App() {
 
   return (
     <div className={containerClasses}>
-      {renderContent()}
+      {/* 지연 로딩된 화면이 도착할 때까지의 폴백. 이미 쓰던 로딩 표현을 그대로 재사용한다. */}
+      <React.Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center h-screen">
+            <SpinnerIcon className="w-16 h-16 animate-spin text-indigo-600" />
+          </div>
+        }
+      >
+        {renderContent()}
+      </React.Suspense>
     </div>
   );
 }

@@ -25,5 +25,20 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        // 라이브러리를 앱 코드와 분리해 배포마다 통째로 다시 받지 않게 한다.
+        // 앱 코드만 바뀌면 vendor 청크는 브라우저 캐시에서 그대로 재사용된다.
+        //
+        // 배열 형태('react': ['react','react-dom'])로는 react-dom/client 같은
+        // 하위 진입점이 메인 청크에 남는다. 경로로 직접 판별한다.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return 'react';
+          if (id.includes('@supabase')) return 'supabase';
+          if (id.includes('lucide-react') || /node_modules\/motion/.test(id)) return 'ui';
+        },
+      },
+    },
   },
 });

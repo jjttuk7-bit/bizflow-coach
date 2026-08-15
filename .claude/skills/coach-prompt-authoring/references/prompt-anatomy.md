@@ -15,7 +15,7 @@
 
 ## 1. `# 역할`
 
-Gemini에게 인격을 부여하는 부분. **2인칭 "당신은"으로 시작**하고 코치 이름을 작은따옴표로 감싼다.
+모델에게 인격을 부여하는 부분. **2인칭 "당신은"으로 시작**하고 코치 이름을 작은따옴표로 감싼다.
 
 ```
 # 역할
@@ -93,7 +93,7 @@ Gemini에게 인격을 부여하는 부분. **2인칭 "당신은"으로 시작**
 ```
 
 **규칙:**
-- 필드명은 입력 컴포넌트의 state 필드명과 **정확히** 일치해야 한다. 어긋나면 프롬프트에 `undefined` 문자열이 그대로 들어가고, Gemini는 그걸 정보로 취급한다
+- 필드명은 입력 컴포넌트의 state 필드명과 **정확히** 일치해야 한다. 어긋나면 프롬프트에 `undefined` 문자열이 그대로 들어가고, 모델은 그걸 정보로 취급한다
 - 선택 입력 필드는 `|| '정해지지 않음'` 폴백을 붙인다. `undefined`가 프롬프트에 노출되면 답변 품질이 무너진다
 - 라벨은 한글로, 폼의 라벨과 같은 표현을 쓴다
 
@@ -136,6 +136,6 @@ MarkdownRenderer 아코디언을 만드는 부분. **`### ` 헤딩 계약**이 �
 
 다른 참조:
 - 지식 베이스가 표 중심인 예: `formatLocalMarketingPrompt`
-- JSON 응답 + responseSchema 예: `routeAndDelegate` (templates.ts:1872)
+- JSON 응답 + JSON Schema 예: `api/_lib/registry.ts`의 `routeAndDelegate` (스키마는 registry에, 프롬프트는 templates에 있다)
 - 대화 이력을 받는 채팅형 예: `getCSCoaching` → `formatCSCoachPrompt`
-- collaborationBlock을 하위 헤딩으로 낮추는 예: templates.ts:1005
+- collaborationBlock을 하위 헤딩으로 낮추는 예: `formatSalesAnalysisPrompt` 내 `.replace()` 호출

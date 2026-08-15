@@ -73,14 +73,24 @@ case '{new-stage}-input':
 ```
 
 ### 5~6. import
+
 ```ts
-// 서비스 (App.tsx:9~38 블록 안)
+// 서비스 함수 — coachApi import 블록 안 (App.tsx:9~39)
 get{Name},
-// 컴포넌트 (App.tsx:39~59 블록 끝)
-import {Name}Input from './components/{Name}Input';
-// 아이콘 (App.tsx:39 한 줄 import에 추가)
+
+// 아이콘 — icons.tsx 한 줄 import에 추가 (App.tsx:40)
 {Icon},
 ```
+
+**컴포넌트는 일반 import가 아니라 지연 로딩으로 선언한다** (App.tsx:48~67 블록):
+
+```ts
+const {Name}Input = React.lazy(() => import('./components/{Name}Input'));
+```
+
+`import {Name}Input from ...`로 쓰면 그 컴포넌트가 첫 화면 번들에 들어가, 로그인도 안 한 방문자가 모든 코치 화면을 내려받게 된다. 기존 코치 전부가 `React.lazy`이므로 신규 코치도 동일하게 맞춘다.
+
+Suspense 경계는 `renderContent()` 호출부에 이미 걸려 있으므로 따로 추가하지 않는다.
 
 ---
 
@@ -180,7 +190,7 @@ switch (currentSpecialist.name) {
 },
 ```
 
-> `action` 내부에서 자기 자신(Specialist 객체)을 참조할 수 없다. 기존 코치들은 `selectedSpecialist`를 쓴다 — `handleSpecialistSelect`가 `action` 호출 전에 이미 세팅해두기 때문이다 (App.tsx:706, 693). 따라서 `setConversation([{ author: selectedSpecialist!, text: result }])` 형태로 쓰거나, 기존 코치(마케터 제인)의 구현을 그대로 따른다.
+> `action` 내부에서 자기 자신(Specialist 객체)을 참조할 수 없다. 기존 코치들은 `selectedSpecialist`를 쓴다 — `handleSpecialistSelect`가 `action` 호출 전에 이미 세팅해두기 때문이다 (App.tsx:706, 717). 따라서 `setConversation([{ author: selectedSpecialist!, text: result }])` 형태로 쓰거나, 기존 코치(마케터 제인)의 구현을 그대로 따른다.
 
 ### 1, 4. AppStage 타입 / render case — 추가하지 않음
 공용 `'analysis'` stage와 `AnalysisResult` 화면을 그대로 쓴다.
@@ -239,7 +249,7 @@ Dashboard 카드 클릭
       setSelectedSpecialist(specialist) + setStage('greeting')
   → SpecialistGreeting 화면 (greeting 전문 노출)
   → "시작하기" 클릭
-  → handleProceedFromGreeting (App.tsx:711)
+  → handleProceedFromGreeting (App.tsx:717)
       selectedSpecialist.action() 호출
   → 아키타입별 분기
 ```

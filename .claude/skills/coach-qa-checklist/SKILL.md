@@ -113,7 +113,7 @@ grep -n "await get{Name}(" App.tsx
 3. **양방향으로** 대조한다 — 프롬프트에만 있는 키(→ `undefined` 삽입)와 폼에만 있는 키(→ 입력이 무시됨) 둘 다 결함이다
 4. 선택 입력 필드에 `|| '정해지지 않음'` 폴백이 있는지 확인한다
 
-**흔한 실패:** `targetArea` vs `target_area`, `productInfo` vs `product`. 프롬프트에 `undefined` 문자열이 들어가고 Gemini는 그걸 정보로 취급해 엉뚱한 답을 낸다.
+**흔한 실패:** `targetArea` vs `target_area`, `productInfo` vs `product`. 프롬프트에 `undefined` 문자열이 들어가고 모델은 그걸 정보로 취급해 엉뚱한 답을 낸다.
 
 ---
 
@@ -171,7 +171,7 @@ grep -n "'{stage-value}'" App.tsx
 
 **검증하지 못한 것을 "통과"로 보고하지 않는다.** 정적 분석으로 확정할 수 없는 항목이 반드시 있다:
 
-- Gemini가 실제로 `### `를 출력하는가 → 실행 확인 필요
+- 모델이 실제로 `### ` 헤딩을 출력하는가 → 실행 확인 필요
 - 지식 베이스의 수치가 사실인가 → 출처 확인 필요
 - 아코디언 UI가 실제로 잘 보이는가 → 브라우저 확인 필요
 

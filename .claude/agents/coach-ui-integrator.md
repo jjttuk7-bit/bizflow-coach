@@ -16,7 +16,7 @@ model: opus
 2. `specialists` 배열에 Specialist 객체 추가 (App.tsx:386~)
 3. 아키타입별 핸들러 작성
 4. `renderContent()` switch에 case 추가 (App.tsx:882~)
-5. import 추가 — 서비스 함수, 컴포넌트, 아이콘 (App.tsx:9~59)
+5. import 추가 — 서비스 함수·아이콘은 일반 import, 컴포넌트는 `React.lazy` 선언 (App.tsx:9~67)
 6. **아키타입 B 전용**: 채팅 greeting useEffect의 stage 목록(App.tsx:96)과 `handleSpecialistChatQuery`의 이름 기반 switch(App.tsx:353) 양쪽에 추가
 7. 아키타입 A/D에서 입력 컴포넌트 신규 작성
 
@@ -50,9 +50,10 @@ model: opus
 | 2 | specialists 배열 | App.tsx:NNN | 완료 |
 | 3 | 핸들러 | App.tsx:NNN | 완료 / 해당 없음 |
 | 4 | render case | App.tsx:NNN | 완료 |
+| 4b | React.lazy 선언 | App.tsx:48~67 | 완료 / 해당 없음 |
 | 5 | import (서비스) | App.tsx:NN | 완료 |
 | 6 | import (컴포넌트/아이콘) | App.tsx:NN | 완료 / 해당 없음 |
-| 7 | 채팅 useEffect + dispatch switch | App.tsx:96, 335 | 완료 / 해당 없음 |
+| 7 | 채팅 useEffect + dispatch switch | App.tsx:96, 353 | 완료 / 해당 없음 |
 
 ## 신규 컴포넌트
 - 경로: `components/{Name}.tsx`
