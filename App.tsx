@@ -1032,13 +1032,14 @@ function App() {
     }
   };
 
-  // 랜딩은 자체 디자인 시스템(웜 페이퍼)을 쓰므로 회색 바탕을 깔지 않는다.
-  const containerClasses =
-    stage === 'landing'
-      ? 'min-h-screen bg-paper'
-      : stage === 'dashboard'
-        ? 'min-h-screen bg-slate-50'
-        : 'min-h-screen bg-slate-50 flex items-center justify-center p-4';
+  // 랜딩·로그인은 자체 디자인 시스템(웜 페이퍼)으로 전체 화면을 직접 구성하므로
+  // 바깥에서 배경·패딩·중앙정렬을 덮어씌우지 않는다.
+  const isEditorialStage = stage === 'landing' || stage === 'login';
+  const containerClasses = isEditorialStage
+    ? 'min-h-screen bg-paper'
+    : stage === 'dashboard'
+      ? 'min-h-screen bg-slate-50'
+      : 'min-h-screen bg-slate-50 flex items-center justify-center p-4';
 
   if (loadingAuth) {
     return (
