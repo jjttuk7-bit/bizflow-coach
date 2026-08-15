@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import ErrorBoundary from './components/ErrorBoundary';
+import ConfigErrorScreen from './components/ConfigErrorScreen';
+import { supabaseConfigError } from './lib/supabase';
 import './index.css';
 
 const rootElement = document.getElementById('root');
@@ -11,6 +14,8 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      {supabaseConfigError ? <ConfigErrorScreen message={supabaseConfigError} /> : <App />}
+    </ErrorBoundary>
   </React.StrictMode>
 );
