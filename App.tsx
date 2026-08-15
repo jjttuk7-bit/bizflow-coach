@@ -1032,9 +1032,13 @@ function App() {
     }
   };
 
-  const containerClasses = (stage === 'dashboard' || stage === 'landing')
-    ? "min-h-screen bg-slate-50"
-    : "min-h-screen bg-slate-50 flex items-center justify-center p-4";
+  // 랜딩은 자체 디자인 시스템(웜 페이퍼)을 쓰므로 회색 바탕을 깔지 않는다.
+  const containerClasses =
+    stage === 'landing'
+      ? 'min-h-screen bg-paper'
+      : stage === 'dashboard'
+        ? 'min-h-screen bg-slate-50'
+        : 'min-h-screen bg-slate-50 flex items-center justify-center p-4';
 
   if (loadingAuth) {
     return (
