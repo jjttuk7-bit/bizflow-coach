@@ -49,17 +49,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: err.message });
     }
 
-    // 원본 오류는 서버 로그에만 남긴다. OpenAI 오류 메시지에는 조직 ID나
-    // 키 일부가 섞일 수 있어 클라이언트로 그대로 흘리지 않는다.
+    // 원본 오류는 서버 로그에만 남긴다 — OpenAI 오류 메시지에는 조직 ID나 키 일부가
+    // 섞일 수 있다. 다만 "무엇을 고쳐야 하는지"까지 감추면 진단이 불가능해지므로,
+    // 비밀이 아닌 범위(어떤 환경변수가 비었는지, 어떤 상태코드인지)는 알려준다.
     console.error('[api/coach]', err);
-    const message = err instanceof Error ? err.message : '';
-    const isConfigError = message.includes('OPENAI_API_KEY') || message.includes('SUPABASE_');
-    return res.status(500).json({
-      error: isConfigError
-        ? '서버 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.'
-        : 'AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-    });
+    return res.status(500).json({ error: describeFailure(err) });
   }
+}
+
+/** 원인을 짚어주되 비밀은 흘리지 않는 메시지로 바꾼다. */
+function describeFailure(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err ?? '');
+  const status = (err as { status?: number })?.status;
+
+  if (raw.includes('OPENAI_API_KEY')) {
+    return '서버에 OPENAI_API_KEY가 설정되지 않았습니다. Vercel 환경변수를 확인해주세요.';
+  }
+  if (raw.includes('SUPABASE_URL') || raw.includes('SUPABASE_ANON_KEY')) {
+    return '서버에 SUPABASE_URL / SUPABASE_ANON_KEY가 설정되지 않았습니다. (VITE_ 접두사 없는 쪽입니다)';
+  }
+  if (status === 401) {
+    return 'OpenAI가 키를 거부했습니다(401). OPENAI_API_KEY 값이 올바른지 확인해주세요.';
+  }
+  if (status === 429) {
+    return 'OpenAI 사용량 한도에 걸렸습니다(429). 결제 수단과 잔액을 확인해주세요.';
+  }
+  if (status === 404 || raw.includes('does not exist') || raw.includes('model_not_found')) {
+    return '지정한 OpenAI 모델을 찾을 수 없습니다. OPENAI_MODEL 값을 확인해주세요.';
+  }
+  if (raw.includes('ENOTFOUND') || raw.includes('ETIMEDOUT') || raw.includes('fetch failed')) {
+    return '외부 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.';
+  }
+  return 'AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
 }
 
 function safeParse(raw: string): unknown {

@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { SparklesIcon, PencilIcon } from './icons';
 import { UPDATED_BAKERY_DESCRIPTION } from '../constants';
 
 interface BusinessProfileSetupProps {
   onSave: (description: string) => void;
   initialDescription?: string;
+  /**
+   * 분석이 실패하면 App이 이 화면으로 되돌린다. 그때 이유를 여기서 보여주지 않으면
+   * 사용자에게는 "버튼을 눌러도 아무 일이 없는" 것으로만 보인다.
+   */
+  error?: string | null;
 }
 
-const BusinessProfileSetup: React.FC<BusinessProfileSetupProps> = ({ onSave, initialDescription }) => {
+const BusinessProfileSetup: React.FC<BusinessProfileSetupProps> = ({ onSave, initialDescription, error }) => {
   const [description, setDescription] = useState(initialDescription || '');
 
   useEffect(() => {
@@ -30,6 +36,19 @@ const BusinessProfileSetup: React.FC<BusinessProfileSetupProps> = ({ onSave, ini
 
   return (
     <div className="w-full max-w-2xl mx-auto p-8 bg-linen rounded-sm space-y-6 animate-fade-in border border-rule">
+      {error && (
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 border-l-2 border-red-500 bg-red-50/60 px-4 py-3 text-sm text-red-700"
+        >
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold">분석을 완료하지 못했습니다.</p>
+            <p className="mt-0.5">{error}</p>
+          </div>
+        </div>
+      )}
+
       <div className="text-center">
         <h2 className="text-2xl font-bold text-ink">
             {isEditMode ? '우리 가게 정보 업데이트' : 'AI 비즈니스 파트너, BizFlow Coach'}

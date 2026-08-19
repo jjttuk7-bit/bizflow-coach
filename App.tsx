@@ -901,7 +901,7 @@ function App() {
       case 'login':
         return <LoginPage onBack={() => setStage('landing')} />;
       case 'profile-setup':
-        return <BusinessProfileSetup onSave={handleProfileSave} initialDescription={fullDescription} />;
+        return <BusinessProfileSetup onSave={handleProfileSave} initialDescription={fullDescription} error={error} />;
       case 'dashboard':
         return (
           <div className="relative">
@@ -1028,7 +1028,7 @@ function App() {
                />
 
       default:
-        return <BusinessProfileSetup onSave={handleProfileSave} initialDescription={fullDescription} />;
+        return <BusinessProfileSetup onSave={handleProfileSave} initialDescription={fullDescription} error={error} />;
     }
   };
 
