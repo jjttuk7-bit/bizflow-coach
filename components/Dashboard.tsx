@@ -12,17 +12,25 @@ interface DashboardProps {
 }
 
 // 지표는 대시보드 진입 후 비동기로 채워지므로 value는 로딩 중 undefined일 수 있다.
-const MetricCard: React.FC<{ title: string; value?: string; Icon: React.FC<{ className?: string }> }> = ({ title, value, Icon }) => (
-    <div className="bg-linen border border-rule rounded-sm p-5 flex items-start gap-4">
-        <Icon className="w-5 h-5 text-slate-ink shrink-0 mt-1" />
-        <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.14em] text-slate-ink">{title}</p>
-            <p className="mt-1.5 text-2xl font-bold tracking-tight text-ink truncate">
-                {value || <span className="text-slate-ink font-normal text-lg">분석 중…</span>}
-            </p>
+// AI는 "30명 (평일), 50명 (주말)"처럼 한 줄에 안 들어가는 값을 돌려준다.
+// 잘라내면 정작 필요한 숫자가 사라지므로 줄바꿈을 허용하고 길이에 따라 크기를 낮춘다.
+const MetricCard: React.FC<{ title: string; value?: string; Icon: React.FC<{ className?: string }> }> = ({ title, value, Icon }) => {
+    const long = (value?.length ?? 0) > 12;
+    return (
+        <div className="bg-linen border border-rule rounded-sm p-5 flex items-start gap-4">
+            <Icon className="w-5 h-5 text-slate-ink shrink-0 mt-1" />
+            <div className="min-w-0">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-ink">{title}</p>
+                <p
+                    title={value}
+                    className={`mt-1.5 font-bold tracking-tight text-ink break-keep leading-snug ${long ? 'text-lg' : 'text-2xl'}`}
+                >
+                    {value || <span className="text-slate-ink font-normal text-lg">분석 중…</span>}
+                </p>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // 코치별 색상은 상단 굵은 선 하나로만 쓴다. 카드 전체를 물들이면
 // 23장이 깔렸을 때 시각적 소음이 되고, 얇은 괘선 위의 색 띠가 더 잘 읽힌다.
