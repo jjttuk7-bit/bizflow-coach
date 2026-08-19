@@ -80,6 +80,14 @@ const BodyRenderer: React.FC<{ content: string }> = ({ content }) => {
                  flushList();
                 inList = true; // Treat as ul for simplicity
                 listItems.push(processLine(line.replace(/^\d+\.\s/, '')));
+            } else if (/^#{1,6}\s+/.test(line)) {
+                // 모델이 내보내는 헤딩 레벨은 일정하지 않다. 처리하지 않으면
+                // '## 3. 실용 솔루션'처럼 샵 기호가 화면에 그대로 노출된다.
+                flushList();
+                elements.push(
+                    <h4 key={i} className="font-bold text-ink mt-4 mb-1"
+                        dangerouslySetInnerHTML={{ __html: processLine(line.replace(/^#{1,6}\s+/, '')) }} />
+                );
             } else {
                 flushList();
                 if (line.trim() !== '') {
@@ -100,7 +108,11 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
     const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
 
     const sections = useMemo(() => {
-        if (!content || !content.includes('### ')) return [];
+        // 프롬프트는 '### '를 지시하지만 모델이 '## '로 내보내는 경우가 실제로 있다.
+        // 특정 레벨에 의존하면 아코디언이 통째로 만들어지지 않으므로 1~3단계를 모두 받는다.
+        // multiline 플래그로 본문 전체에서 헤딩 줄을 찾는다.
+        const HEADING = /^#{1,3}\s+/m;
+        if (!content || !HEADING.test(content)) return [];
         
         const lines = content.split('\n');
         const newSections: { title: string, content: string }[] = [];
@@ -108,11 +120,13 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
         let currentTitle: string | null = null;
 
         for (const line of lines) {
-            if (line.startsWith('### ')) {
+            if (HEADING.test(line)) {
                 if (currentTitle !== null) {
                     newSections.push({ title: currentTitle, content: currentContent.join('\n') });
                 }
-                currentTitle = line.substring(4).trim();
+                // 기존 프롬프트에는 '### ### 제목'처럼 샵이 겹친 표기가 있다.
+                // 앞쪽 샵을 모두 걷어내야 제목에 '###'가 남지 않는다.
+                currentTitle = line.replace(/^#+\s*/, '').replace(/^#+\s*/, '').trim();
                 currentContent = [];
             } else {
                  if (currentTitle !== null) {
