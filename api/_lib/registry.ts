@@ -1,6 +1,6 @@
 import * as P from '../_prompts/templates';
 import { callText, callJson, stringSchema } from './openai';
-import type { BusinessProfile, BusinessData, SpecialistInfo, WireMessage } from './types';
+import type { BusinessProfile, BusinessData, BusinessStep, SpecialistInfo, WireMessage } from './types';
 
 /**
  * actionId → 프롬프트 생성 + 모델 호출.
@@ -11,7 +11,19 @@ import type { BusinessProfile, BusinessData, SpecialistInfo, WireMessage } from 
 type Handler = (payload: any) => Promise<unknown>;
 
 const PROFILE_FIELDS = ['name', 'industry', 'product', 'employees'];
-const BUSINESS_DATA_FIELDS = ['상권분석', '메뉴', '가격', '판매', '재무'];
+/**
+ * BusinessData의 키는 한글이지만 JSON Schema 속성 이름으로는 ASCII만 쓴다.
+ * Structured Outputs(strict)는 속성 이름에 제약이 있어 비ASCII 키가 거부될 수 있다.
+ * 모델에게는 ASCII 키로 받고 서버에서 한글 키로 되돌린다.
+ */
+const BUSINESS_DATA_KEY_MAP: Record<string, BusinessStep> = {
+  marketAnalysis: '상권분석',
+  menu: '메뉴',
+  price: '가격',
+  sales: '판매',
+  finance: '재무',
+};
+const BUSINESS_DATA_FIELDS = Object.keys(BUSINESS_DATA_KEY_MAP);
 const METRIC_FIELDS = ['dailyCustomers', 'avgSpend', 'menuItems', 'monthlyRent'];
 
 const delegationSchema = {
@@ -51,8 +63,18 @@ export const actions: Record<string, Handler> = {
   parseBusinessProfile: (p: { description: string }) =>
     callJson(P.formatProfileParsingPrompt(p.description), 'business_profile', stringSchema(PROFILE_FIELDS)),
 
-  parseBusinessData: (p: { description: string }) =>
-    callJson(P.formatBusinessDataParsingPrompt(p.description), 'business_data', stringSchema(BUSINESS_DATA_FIELDS)),
+  parseBusinessData: async (p: { description: string }) => {
+    const raw = await callJson<Record<string, string>>(
+      P.formatBusinessDataParsingPrompt(p.description),
+      'business_data',
+      stringSchema(BUSINESS_DATA_FIELDS),
+    );
+    const out = {} as BusinessData;
+    for (const [ascii, korean] of Object.entries(BUSINESS_DATA_KEY_MAP)) {
+      out[korean] = raw[ascii] ?? '';
+    }
+    return out;
+  },
 
   getDashboardMetrics: (p: { profile: BusinessProfile; data: BusinessData }) =>
     callJson(P.formatDashboardMetricsPrompt(p.profile, p.data), 'dashboard_metrics', stringSchema(METRIC_FIELDS)),

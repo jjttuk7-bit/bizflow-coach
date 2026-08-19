@@ -80,7 +80,13 @@ function describeFailure(err: unknown): string {
   if (raw.includes('ENOTFOUND') || raw.includes('ETIMEDOUT') || raw.includes('fetch failed')) {
     return '외부 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.';
   }
-  return 'AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+  // 어디에도 걸리지 않으면 최소한 상태코드와 오류 코드는 보여준다.
+  // 이 값들은 비밀이 아니고, 없으면 원인 추적이 사실상 불가능하다.
+  const code = (err as { code?: string })?.code;
+  const detail = [status ? `HTTP ${status}` : null, code].filter(Boolean).join(' · ');
+  return detail
+    ? `AI 분석 중 오류가 발생했습니다. (${detail})`
+    : 'AI 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
 }
 
 function safeParse(raw: string): unknown {

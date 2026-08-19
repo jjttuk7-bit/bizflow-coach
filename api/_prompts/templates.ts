@@ -60,6 +60,7 @@ export function formatProfileParsingPrompt(description: string): string {
 - 사용자의 설명에서 가게 이름, 업종, 주요 제품/메뉴, 직원 수를 추출해주세요.
 - 정보가 명확하지 않더라도, 문맥을 파악하여 가장 가능성 높은 정보를 기입해주세요. 예를 들어 '저 혼자 해요'는 직원 수 '1명'으로 해석합니다.
 - 반드시 응답은 JSON 형식이어야 합니다.
+- JSON의 키는 다음 영문 키를 사용하세요: marketAnalysis(상권분석), menu(메뉴), price(가격), sales(판매), finance(재무). 값은 한국어로 작성합니다.
 
 ## 사용자 입력 (가게 설명)
 ---
