@@ -32,6 +32,12 @@ description: "BizFlow Coach의 OpenAI 프롬프트를 api/_prompts/templates.ts�
 
 신규 프롬프트는 파일 끝에 추가한다. 위치를 못 찾겠으면 `grep -n "formatLocalMarketingPrompt" api/_prompts/templates.ts`로 인접 함수를 찾는다.
 
+> **api/ 안에서 상대 경로를 import할 때는 반드시 `.js` 확장자를 붙인다** —
+> `'./openai'`가 아니라 `'./openai.js'`. 이 프로젝트는 `"type": "module"`이라
+> Vercel Functions가 ESM으로 실행되는데, ESM은 확장자를 요구한다. TypeScript는
+> 확장자 없는 import를 통과시키므로 tsc도 빌드도 성공한 뒤 **배포된 함수만**
+> `ERR_MODULE_NOT_FOUND`로 죽는다. `npm run build`가 이걸 검사한다.
+
 > `templates.ts`의 함수는 전부 `export`다. `registry.ts`가 `import * as P`로 가져다 쓰므로 `export`를 빠뜨리면 등록 단계에서 타입 에러가 난다.
 
 ## 1. 프롬프트 5부 구조

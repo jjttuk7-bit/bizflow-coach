@@ -5,7 +5,7 @@ import {
   BUSINESS_STEPS,
   SpecialistInfo,
   WireMessage,
-} from '../_lib/types';
+} from '../_lib/types.js';
 
 /**
  * 대화 이력을 프롬프트에 삽입할 문자열로 변환한다.

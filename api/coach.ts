@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { actions } from './_lib/registry';
-import { requireUser, UnauthorizedError } from './_lib/auth';
+import { actions } from './_lib/registry.js';
+import { requireUser, UnauthorizedError } from './_lib/auth.js';
 
 /**
  * 모든 AI 코칭 호출의 단일 진입점.

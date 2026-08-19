@@ -1,6 +1,6 @@
-import * as P from '../_prompts/templates';
-import { callText, callJson, stringSchema } from './openai';
-import type { BusinessProfile, BusinessData, BusinessStep, SpecialistInfo, WireMessage } from './types';
+import * as P from '../_prompts/templates.js';
+import { callText, callJson, stringSchema } from './openai.js';
+import type { BusinessProfile, BusinessData, BusinessStep, SpecialistInfo, WireMessage } from './types.js';
 
 /**
  * actionId → 프롬프트 생성 + 모델 호출.
